@@ -38,12 +38,12 @@ class Transaction extends Model implements ITransaction
 
     public function getCreateTime(): int
     {
-        return $this->created_at;
+        return $this->created_at->getTimestamp();
     }
 
     public function getUpdateTime(): int
     {
-        return $this->modified_at;
+        return $this->modified_at?->getTimestamp() ?? $this->getCreateTime();
     }
 
     public function getMeta(): ?array
