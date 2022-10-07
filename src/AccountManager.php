@@ -2,14 +2,23 @@
 
 namespace dnj\Account;
 
+use dnj\Account\Concerns\UpdatingAccount;
 use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\Contracts\IAccountManager;
+use dnj\Account\Exceptions\BalanceInsufficientException;
+use dnj\Account\Exceptions\DisabledAccountException;
+use dnj\Account\Exceptions\InvalidAccountOperationException;
 use dnj\Account\Models\Account;
+use dnj\Number\Contracts\INumber;
 use dnj\Number\Number;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class AccountManager implements IAccountManager
 {
+    use UpdatingAccount;
+
     public function getByID(int $id): Account
     {
         return Account::query()->findOrFail($id);
@@ -53,6 +62,7 @@ class AccountManager implements IAccountManager
         $account->currency_id = $currencyId;
         $account->status = $status;
         $account->balance = Number::fromInt(0);
+        $account->holding = Number::fromInt(0);
         $account->can_send = $canSend;
         $account->can_receive = $canReceive;
         $account->meta = $meta;
@@ -65,28 +75,47 @@ class AccountManager implements IAccountManager
         int $accountId,
         array $changes,
     ): Account {
-        $account = $this->getByID($accountId);
-        if (isset($changes['title'])) {
-            $account->title = $changes['title'];
-        }
-        if (array_key_exists('userId', $changes)) {
-            $account->user_id = $changes['userId'];
-        }
-        if (isset($changes['status'])) {
-            $account->status = $changes['status'];
-        }
-        if (isset($changes['canSend'])) {
-            $account->can_send = $changes['canSend'];
-        }
-        if (isset($changes['canReceive'])) {
-            $account->can_receive = $changes['canReceive'];
-        }
-        if (array_key_exists('meta', $changes)) {
-            $account->meta = $changes['meta'];
-        }
-        $account->save();
+        return DB::transaction(function () use ($accountId, $changes) {
+            $account = $this->getAccountForUpdate($accountId);
+            if (isset($changes['title'])) {
+                $account->title = $changes['title'];
+            }
+            if (array_key_exists('userId', $changes)) {
+                $account->user_id = $changes['userId'];
+            }
+            if (isset($changes['status'])) {
+                $account->status = $changes['status'];
+            }
+            if (isset($changes['canSend'])) {
+                $account->can_send = $changes['canSend'];
+            }
+            if (isset($changes['canReceive'])) {
+                $account->can_receive = $changes['canReceive'];
+            }
+            if (array_key_exists('meta', $changes)) {
+                $account->meta = $changes['meta'];
+            }
+            $account->save();
 
-        return $account;
+            return $account;
+        });
+    }
+
+    public function recalucateBalance(int $accountId): Account
+    {
+        return DB::transaction(function () use ($accountId) {
+            $account = $this->getAccountForUpdate($accountId);
+            $balance = DB::table('accounts_transactions')
+                ->select(DB::raw("sum(case when from_id={$accountId} then amount * -1 else amount end) as balance"))
+                ->where('from_id', $accountId)
+                ->orWhere('to_id', $accountId)
+                ->value('balance');
+            $balance = Number::fromInput($balance);
+            $account->balance = $balance;
+            $account->save();
+
+            return $account;
+        });
     }
 
     public function delete(int $accountId): void

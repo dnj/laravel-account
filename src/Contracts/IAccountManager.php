@@ -34,5 +34,7 @@ interface IAccountManager
         array $changes
     ): IAccount;
 
+    public function recalucateBalance(int $accountId): IAccount;
+
     public function delete(int $accountId): void;
 }
