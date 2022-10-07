@@ -22,7 +22,7 @@ class TransactionManager implements ITransactionManager
     }
 
     /**
-     * @return Collection<ITransaction>
+     * @return Collection<Transaction>
      */
     public function findByAccount(int $accountId): Collection
     {
