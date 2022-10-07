@@ -2,37 +2,11 @@
 
 namespace dnj\Account\Tests;
 
-use dnj\Account\AccountManager;
 use dnj\Account\Contracts\AccountStatus;
-use dnj\Account\Contracts\IAccountManager;
-use dnj\Account\Models\Account;
-use dnj\Currency\Contracts\ICurrencyManager;
-use dnj\Currency\Contracts\RoundingBehaviour;
-use dnj\Currency\CurrencyManager;
-use dnj\Currency\Models\Currency;
+use dnj\Number\Number;
 
 class AccountManagerTest extends TestCase
 {
-    public function getManager(): AccountManager
-    {
-        return $this->app->make(IAccountManager::class);
-    }
-
-    public function getCurrencyManager(): CurrencyManager
-    {
-        return $this->app->make(ICurrencyManager::class);
-    }
-
-    public function createUSD(): Currency
-    {
-        return $this->getCurrencyManager()->create('USD', 'US Dollar', '$', '', RoundingBehaviour::CEIL, 2);
-    }
-
-    public function createUSDAccount(Currency $USD, ?int $userId = null): Account
-    {
-        return $this->getManager()->create('USD Reserve', $USD->getID(), $userId);
-    }
-
     public function testCreate()
     {
         $now = time();
@@ -49,7 +23,7 @@ class AccountManagerTest extends TestCase
     {
         $USD = $this->createUSD();
         $account = $this->createUSDAccount($USD);
-        $accountCopy = $this->getManager()->getByID($account->getID());
+        $accountCopy = $this->getAccountManager()->getByID($account->getID());
         $this->assertSame($account->getID(), $accountCopy->getID());
     }
 
@@ -59,15 +33,15 @@ class AccountManagerTest extends TestCase
         $systemAccount = $this->createUSDAccount($USD, null);
         $userAccount = $this->createUSDAccount($USD, 2);
 
-        $accounts = $this->getManager()->findByUser(2);
+        $accounts = $this->getAccountManager()->findByUser(2);
         $this->assertSame(1, $accounts->count());
         $this->assertSame($userAccount->getID(), $accounts[0]->getID());
 
-        $accounts = $this->getManager()->findByUser(null);
+        $accounts = $this->getAccountManager()->findByUser(null);
         $this->assertSame(1, $accounts->count());
         $this->assertSame($systemAccount->getID(), $accounts[0]->getID());
 
-        $accounts = $this->getManager()->findAll();
+        $accounts = $this->getAccountManager()->findAll();
         $this->assertSame(2, $accounts->count(2));
     }
 
@@ -82,7 +56,7 @@ class AccountManagerTest extends TestCase
         $this->assertTrue($account->getCanReceive());
         $this->assertNull($account->getMeta());
 
-        $account = $this->getManager()->update($account->getID(), [
+        $account = $this->getAccountManager()->update($account->getID(), [
             'title' => 'Test Account',
             'userId' => 1,
             'status' => AccountStatus::DEACTIVE,
@@ -105,7 +79,38 @@ class AccountManagerTest extends TestCase
     {
         $USD = $this->createUSD();
         $account = $this->createUSDAccount($USD);
-        $this->getManager()->delete($account->getID());
+        $this->getAccountManager()->delete($account->getID());
         $this->assertTrue(true);
+    }
+
+    public function testRecalucateBalance()
+    {
+        $USD = $this->createUSD();
+        $account1 = $this->createUSDAccount($USD, 1);
+        $account2 = $this->createUSDAccount($USD, 1);
+
+        $this->assertSame(0, $account1->getBalance()->getValue());
+        $this->assertSame(0, $account2->getBalance()->getValue());
+
+        $this->getTransactionManager()->transfer($account1->getID(), $account2->getID(), Number::fromInput('1.02'), null, true);
+        $this->getTransactionManager()->transfer($account1->getID(), $account2->getID(), Number::fromInput('2.05'), null, true);
+
+        $account1 = $this->getAccountManager()->getByID($account1->getID());
+        $account2 = $this->getAccountManager()->getByID($account2->getID());
+
+        $this->assertSame(-3.07, $account1->getBalance()->getValue());
+        $this->assertSame(3.07, $account2->getBalance()->getValue());
+
+        $account1->balance = Number::fromInt(0);
+        $account1->save();
+
+        $account2->balance = Number::fromInt(0);
+        $account2->save();
+
+        $account1 = $this->getAccountManager()->recalucateBalance($account1->getID());
+        $account2 = $this->getAccountManager()->recalucateBalance($account2->getID());
+
+        $this->assertSame(-3.07, $account1->getBalance()->getValue());
+        $this->assertSame(3.07, $account2->getBalance()->getValue());
     }
 }

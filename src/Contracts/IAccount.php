@@ -20,6 +20,10 @@ interface IAccount
 
     public function getBalance(): INumber;
 
+    public function getHoldingBalance(): INumber;
+
+    public function getAvailableBalance(): INumber;
+
     public function getCanSend(): bool;
 
     public function getCanReceive(): bool;

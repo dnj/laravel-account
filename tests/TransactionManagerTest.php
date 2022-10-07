@@ -2,58 +2,14 @@
 
 namespace dnj\Account\Tests;
 
-use dnj\Account\AccountManager;
 use dnj\Account\Contracts\AccountStatus;
-use dnj\Account\Contracts\IAccountManager;
-use dnj\Account\Contracts\ITransactionManager;
 use dnj\Account\Exceptions\CurrencyMismatchException;
 use dnj\Account\Exceptions\DisabledAccountException;
 use dnj\Account\Exceptions\InvalidAccountOperationException;
-use dnj\Account\Models\Account;
-use dnj\Account\TransactionManager;
-use dnj\Currency\Contracts\ICurrencyManager;
-use dnj\Currency\Contracts\RoundingBehaviour;
-use dnj\Currency\CurrencyManager;
-use dnj\Currency\Models\Currency;
 use dnj\Number\Number;
 
 class TransactionManagerTest extends TestCase
 {
-    public function getAccountManager(): AccountManager
-    {
-        return $this->app->make(IAccountManager::class);
-    }
-
-    public function getTransactionManager(): TransactionManager
-    {
-        return $this->app->make(ITransactionManager::class);
-    }
-
-    public function getCurrencyManager(): CurrencyManager
-    {
-        return $this->app->make(ICurrencyManager::class);
-    }
-
-    public function createUSD(): Currency
-    {
-        return $this->getCurrencyManager()->create('USD', 'US Dollar', '$', '', RoundingBehaviour::CEIL, 2);
-    }
-
-    public function createEUR(): Currency
-    {
-        return $this->getCurrencyManager()->create('USD', 'US Dollar', '$', '', RoundingBehaviour::CEIL, 2);
-    }
-
-    public function createUSDAccount(Currency $USD, ?int $userId = null): Account
-    {
-        return $this->getAccountManager()->create('USD Reserve', $USD->getID(), $userId);
-    }
-
-    public function createEURAccount(Currency $EUR, ?int $userId = null): Account
-    {
-        return $this->getAccountManager()->create('EUR Reserve', $EUR->getID(), $userId);
-    }
-
     public function testTransfer()
     {
         $USD = $this->createUSD();
@@ -64,7 +20,8 @@ class TransactionManagerTest extends TestCase
             $account1->getID(),
             $account2->getID(),
             Number::formString('1.02'),
-            ['key1' => 'value1']
+            ['key1' => 'value1'],
+            true
         );
         $this->assertSame(1.02, $transaction->getAmount()->getValue());
     }
@@ -82,7 +39,9 @@ class TransactionManagerTest extends TestCase
         $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true
         );
     }
 
@@ -98,7 +57,9 @@ class TransactionManagerTest extends TestCase
         $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true
         );
     }
 
@@ -114,7 +75,9 @@ class TransactionManagerTest extends TestCase
         $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true
         );
     }
 
@@ -130,7 +93,9 @@ class TransactionManagerTest extends TestCase
         $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true
         );
     }
 
@@ -145,7 +110,9 @@ class TransactionManagerTest extends TestCase
         $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true
         );
     }
 
@@ -158,7 +125,9 @@ class TransactionManagerTest extends TestCase
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true
         );
         $this->assertSame(1.02, $transaction->getAmount()->getValue());
 
@@ -177,7 +146,9 @@ class TransactionManagerTest extends TestCase
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true
         );
         $this->assertSame(1.02, $transaction->getAmount()->getValue());
 
@@ -197,7 +168,9 @@ class TransactionManagerTest extends TestCase
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true,
         );
         $this->assertSame(1.02, $transaction->getAmount()->getValue());
 
@@ -218,7 +191,8 @@ class TransactionManagerTest extends TestCase
             $account1->getID(),
             $account2->getID(),
             Number::formString('1.02'),
-            ['key1' => 'value1']
+            ['key1' => 'value1'],
+            true,
         );
         $this->assertSame(['key1' => 'value1'], $transaction->getMeta());
 
@@ -236,17 +210,23 @@ class TransactionManagerTest extends TestCase
         $this->getTransactionManager()->transfer(
             $account1->getID(),
             $account2->getID(),
-            Number::formString('1.02')
+            Number::formString('1.02'),
+            null,
+            true,
         );
         $this->getTransactionManager()->transfer(
             $account2->getID(),
             $account1->getID(),
-            Number::formString('2.05')
+            Number::formString('2.05'),
+            null,
+            true,
         );
         $this->getTransactionManager()->transfer(
             $account2->getID(),
             $account3->getID(),
-            Number::formString('4.00')
+            Number::formString('4.00'),
+            null,
+            true,
         );
 
         $transactions = $this->getTransactionManager()->findByAccount($account1->getID());

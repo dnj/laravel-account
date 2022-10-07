@@ -2,8 +2,10 @@
 
 namespace dnj\Account;
 
+use dnj\Account\Concerns\UpdatingAccount;
 use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\Contracts\ITransactionManager;
+use dnj\Account\Exceptions\BalanceInsufficientException;
 use dnj\Account\Exceptions\CurrencyMismatchException;
 use dnj\Account\Exceptions\DisabledAccountException;
 use dnj\Account\Exceptions\InvalidAccountOperationException;
@@ -16,6 +18,8 @@ use Illuminate\Support\Facades\DB;
 
 class TransactionManager implements ITransactionManager
 {
+    use UpdatingAccount;
+
     public function getByID(int $id): Transaction
     {
         return Transaction::query()->findOrFail($id);
@@ -37,22 +41,11 @@ class TransactionManager implements ITransactionManager
         int $toAccountId,
         INumber $amount,
         ?array $meta = null,
+        bool $force = false,
     ): Transaction {
-        DB::beginTransaction();
-        try {
-            /**
-             * @var Account
-             */
-            $fromAccount = Account::query()
-                ->lockForUpdate()
-                ->findOrFail($fromAccountId);
-
-            /**
-             * @var Account
-             */
-            $toAccount = Account::query()
-                ->lockForUpdate()
-                ->findOrFail($toAccountId);
+        return DB::transaction(function () use ($fromAccountId, $toAccountId, $amount, $meta, $force) {
+            $fromAccount = $this->getAccountForUpdate($fromAccountId);
+            $toAccount = $this->getAccountForUpdate($toAccountId);
 
             if (AccountStatus::ACTIVE !== $fromAccount->status) {
                 throw new DisabledAccountException($fromAccount);
@@ -70,30 +63,24 @@ class TransactionManager implements ITransactionManager
                 throw new InvalidAccountOperationException($toAccount, 'receive');
             }
 
+            $available = $fromAccount->getAvailableBalance();
+            if (!$force and $available->lt($amount)) {
+                throw new BalanceInsufficientException($fromAccount, $available, $amount);
+            }
+
             $transaction = $this->createTransaction($fromAccount, $toAccount, $amount, $meta);
 
-            DB::commit();
-
             return $transaction;
-        } catch (Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        });
     }
 
-    public function rollback(int $transactionId): Transaction
+    public function rollback(int $transactionId, bool $force = false): Transaction
     {
-        DB::beginTransaction();
-        try {
+        return DB::transaction(function() use ($transactionId, $force) {
             $transaction = $this->getByID($transactionId);
 
-            $fromAccount = Account::query()
-                ->lockForUpdate()
-                ->findOrFail($transaction->getFromAccountID());
-
-            $toAccount = Account::query()
-                ->lockForUpdate()
-                ->findOrFail($transaction->getToAccountID());
+            $fromAccount = $this->getAccountForUpdate($transaction->getFromAccountID());
+            $toAccount = $this->getAccountForUpdate($transaction->getToAccountID());
 
             if (AccountStatus::ACTIVE !== $fromAccount->status) {
                 throw new DisabledAccountException($fromAccount);
@@ -103,18 +90,20 @@ class TransactionManager implements ITransactionManager
                 throw new DisabledAccountException($toAccount);
             }
 
-            $transaction = $this->createTransaction($toAccount, $fromAccount, $transaction->getAmount(), [
+            $amount = $transaction->getAmount();
+
+            $available = $toAccount->getAvailableBalance();
+            if (!$force and $available->lt($amount)) {
+                throw new BalanceInsufficientException($toAccount, $available, $amount);
+            }
+
+            $transaction = $this->createTransaction($toAccount, $fromAccount, $amount, [
                 'type' => 'rollback-transaction',
                 'original-transaction' => $transactionId,
             ]);
 
-            DB::commit();
-
             return $transaction;
-        } catch (Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        });
     }
 
     public function update(int $transactionId, ?array $meta = null): Transaction

@@ -18,6 +18,7 @@ class Account extends Model implements IAccount
 
     protected $casts = [
         'balance' => Number::class,
+        'holding' => Number::class,
         'meta' => 'array',
         'status' => AccountStatus::class,
     ];
@@ -35,6 +36,11 @@ class Account extends Model implements IAccount
     public function currency()
     {
         return $this->belongsTo(Currency::class);
+    }
+
+    public function holdings()
+    {
+        return $this->hasMany(Holding::class);
     }
 
     public function getID(): int
@@ -80,6 +86,16 @@ class Account extends Model implements IAccount
     public function getBalance(): INumber
     {
         return $this->balance;
+    }
+
+    public function getHoldingBalance(): INumber
+    {
+        return $this->holding;
+    }
+
+    public function getAvailableBalance(): INumber
+    {
+        return $this->balance->sub($this->holding);
     }
 
     public function getCanSend(): bool

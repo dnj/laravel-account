@@ -18,9 +18,10 @@ interface ITransactionManager
         int $toAccountId,
         INumber $amount,
         ?array $meta = null,
+        bool $force = false,
     ): ITransaction;
 
-    public function rollback(int $transactionId): ITransaction;
+    public function rollback(int $transactionId, bool $force = false): ITransaction;
 
     public function update(int $transactionId, ?array $meta = null): ITransaction;
 }
