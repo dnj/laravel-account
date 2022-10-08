@@ -27,7 +27,7 @@ interface IAccountManager
     ): IAccount;
 
     /**
-     * @param array{title?:string, userId?:int|null, status?:AccountStatus, canSend?: bool, canReceive?:bool, meta?:array|null}
+     * @param array{title?:string, userId?:int|null, status?:AccountStatus, canSend?: bool, canReceive?:bool, meta?:array|null} $changes
      */
     public function update(
         int $accountId,

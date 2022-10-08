@@ -7,6 +7,7 @@ use dnj\Account\Exceptions\MultipleAccountOperationException;
 use dnj\Account\Models\Holding;
 use dnj\Number\Number;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use InvalidArgumentException;
 
 class HoldingManagerTest extends TestCase
 {
@@ -159,8 +160,25 @@ class HoldingManagerTest extends TestCase
         $holding = $this->getHoldingManager()->acquire($account->getID(), Number::fromInt(2), null);
         $this->assertNull($holding->getMeta());
 
-        $holding = $this->getHoldingManager()->update($holding->getID(), ['foo' => 'bar']);
+        $holding = $this->getHoldingManager()->update($holding->getID(), [
+            'meta' => ['foo' => 'bar'],
+            'amount' => Number::fromInt(1),
+        ]);
         $this->assertSame(['foo' => 'bar'], $holding->getMeta());
+        $this->assertSame(1, $holding->getAmount()->getValue());
+
+        $account = $this->getAccountManager()->getByID($account->getID());
+        $this->assertSame(1, $account->getHoldingBalance()->getValue());
+
+        $holding = $this->getHoldingManager()->update($holding->getID(), [
+            'amount' => Number::fromInt(1),
+        ]);
+        $this->assertSame(1, $holding->getAmount()->getValue());
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->getHoldingManager()->update($holding->getID(), [
+            'amount' => Number::fromInt(-1),
+        ]);
     }
 
     public function testRecalucateHoldingBalance()

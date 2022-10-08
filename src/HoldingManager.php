@@ -13,6 +13,7 @@ use dnj\Number\Number;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class HoldingManager implements IHoldingManager
 {
@@ -70,12 +71,32 @@ class HoldingManager implements IHoldingManager
         });
     }
 
-    public function update(int $recordId, ?array $meta = null): Holding
+    public function update(int $recordId, array $changes): Holding
     {
-        return DB::transaction(function () use ($recordId, $meta) {
+        return DB::transaction(function () use ($recordId, $changes) {
             $holding = $this->getHoldingForUpdate($recordId);
-            $holding->meta = $meta;
+            $diffHoldingAmount = null;
+            if (isset($changes['amount'])) {
+                if ($changes['amount']->lte(0)) {
+                    throw new InvalidArgumentException('new amount of holding cannot be non-positive number');
+                }
+                $diffHoldingAmount = $changes['amount']->sub($holding->amount);
+                if (!$diffHoldingAmount->isEqual(0)) {
+                    $holding->amount = $changes['amount'];
+                } else {
+                    $diffHoldingAmount = null;
+                }
+            }
+            if (array_key_exists('meta', $changes)) {
+                $holding->meta = $changes['meta'];
+            }
             $holding->save();
+
+            if ($diffHoldingAmount) {
+                $account = $this->getAccountForUpdate($holding->account_id);
+                $account->holding = $account->holding->add($diffHoldingAmount);
+                $account->save();
+            }
 
             return $holding;
         });

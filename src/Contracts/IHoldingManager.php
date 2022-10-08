@@ -10,7 +10,10 @@ interface IHoldingManager
 
     public function release(int $recordId): IAccount;
 
-    public function update(int $recordId, ?array $meta = null): IHoldingRecord;
+    /**
+     * @param array{amount?:INumber,meta?:array|null} $changes
+     */
+    public function update(int $recordId, array $changes): IHoldingRecord;
 
     /**
      * @param iterable<int> $recordIds

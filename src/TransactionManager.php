@@ -12,7 +12,6 @@ use dnj\Account\Exceptions\InvalidAccountOperationException;
 use dnj\Account\Models\Account;
 use dnj\Account\Models\Transaction;
 use dnj\Number\Contracts\INumber;
-use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -76,7 +75,7 @@ class TransactionManager implements ITransactionManager
 
     public function rollback(int $transactionId, bool $force = false): Transaction
     {
-        return DB::transaction(function() use ($transactionId, $force) {
+        return DB::transaction(function () use ($transactionId, $force) {
             $transaction = $this->getByID($transactionId);
 
             $fromAccount = $this->getAccountForUpdate($transaction->getFromAccountID());
