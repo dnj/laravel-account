@@ -20,7 +20,9 @@ class AccountController extends Controller {
 	}
 	
 	public function create ( CreateNewAccountRequest $request ) {
-		dd("asdsa");
+		if ( !auth()->check() ) {
+			abort(401 , 'unauthenticated');
+		}
 		$title = $request->get('title');
 		$currency_id = $request->get('currency_id');
 		$can_send = $request->get('can_send');
@@ -28,16 +30,15 @@ class AccountController extends Controller {
 		$meta = $request->get('meta');
 		$user_id = auth()->user() ? auth()->user()->id : null;
 		$account = $this->account_manager->create($title , $currency_id , $user_id , AccountStatus::ACTIVE , $can_send , $can_receive , $meta);
-		$account = AccountResource::make($account->load([
-															'user' ,
-															'currency' ,
-															'holdings' ,
-														]));
+		$account = AccountResource::make($account);
 		
 		return response()->json(compact('account'));
 	}
 	
 	public function update ( AccountRequest $request ) {
+		if ( !auth()->check() ) {
+			abort(401 , 'unauthenticated');
+		}
 		try {
 			$account_id = $request->get('account_id');
 			$data = $request->only([
@@ -48,16 +49,10 @@ class AccountController extends Controller {
 									   'canReceive' ,
 									   'meta' ,
 								   ]);
-			if ( auth()->check() ) {
-				$data[ 'user_id' ] = auth()->user()->id;
-			}
+			$data[ 'user_id' ] = auth()->user()->id;
 			$this->account_manager->update($account_id , $data);
 			$account = $this->account_manager->getByID($account_id);
-			$account = AccountResource::make($account->load([
-																'user' ,
-																'currency' ,
-																'holdings' ,
-															]));
+			$account = AccountResource::make($account);
 			
 			return response()->json(compact('account'));
 		}
@@ -67,6 +62,9 @@ class AccountController extends Controller {
 	}
 	
 	public function destroy ( AccountRequest $request ) {
+		if ( !auth()->check() ) {
+			abort(401 , 'unauthenticated');
+		}
 		try {
 			$account_id = $request->get('account_id');
 			$this->account_manager->delete($account_id);
@@ -82,18 +80,10 @@ class AccountController extends Controller {
 	
 	public function filter ( Request $request ) {
 		
-		if ( auth()->check() ) {
-			$user_id = auth()->user()->id;
+		if ( !auth()->check() ) {
+			abort(401 , 'unauthenticated');
 		}
-		else {
-			$user_id = null;
-		}
-		$collection = $this->account_manager->findByUser($user_id);
-		$collection = $collection->load([
-											'user' ,
-											'currency' ,
-											'holdings' ,
-										]);
+		$collection = $this->account_manager->findByUser(auth()->user()->id);
 		
 		return response()->json([
 									'accounts' => $collection ,
