@@ -7,7 +7,6 @@ use dnj\Number\Number;
 use Illuminate\Testing\Fluent\AssertableJson;
 
 class AccountTest extends TestCase {
-	
 	/**
 	 * Testing validation for creating new account
 	 *
@@ -20,7 +19,8 @@ class AccountTest extends TestCase {
 			'currency_id' => '' ,
 			'meta' => 'test' ,
 		];
-		$response = $this->postJson('/api/create' , $data);
+		$route = $this->getRoute('accounts/create');
+		$response = $this->postJson($route , $data);
 		$response->assertStatus(422)
 				 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
 																			  "errors.title" ,
@@ -53,7 +53,8 @@ class AccountTest extends TestCase {
 				] ,
 			] ,
 		];
-		$response = $this->postJson('/api/create' , $data);
+		$route = $this->getRoute('accounts/create');
+		$response = $this->postJson($route , $data);
 		$response->assertStatus(200)
 				 ->assertJson(function ( AssertableJson $json ) use ( $data ) {
 					 $json->where('account.title' , $data[ 'title' ]);
@@ -68,17 +69,19 @@ class AccountTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function tes_validation_for_update_account () {
+	public function test_validation_for_update_account () {
 		$data = [
 			'account_id' => '' ,
 		];
-		$response = $this->postJson('/api/update' , $data);
+		$route = $this->getRoute('accounts/update');
+		$response = $this->putJson($route , $data);
 		$response->assertStatus(422)
 				 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
 																			  'errors.account_id' ,
 																		  ])
 																 ->etc());
 	}
+	
 	/**
 	 * Testing update account without authenticate
 	 *
@@ -94,9 +97,9 @@ class AccountTest extends TestCase {
 			'canReceive' => 0 ,
 			'currency_id' => $account->currency_id ,
 			'status' => AccountStatus::DEACTIVE->value ,
-			'account_id' => $account->id ,
 		];
-		$response = $this->postJson('/api/update' , $data);
+		$route = $this->getRoute("accounts/update/{$account->id}");
+		$response = $this->postJson($route , $data);
 		$response->assertStatus(200)
 				 ->assertJson(function ( AssertableJson $json ) use ( $data ) {
 					 $json->where('account.title' , $data[ 'title' ]);
@@ -104,7 +107,7 @@ class AccountTest extends TestCase {
 					 $json->where('account.can_receive' , $data[ 'canReceive' ]);
 					 $json->where('account.currency_id' , $data[ 'currency_id' ]);
 				 });
-		$response = $this->postJson('/api/update' , [
+		$response = $this->postJson($route , [
 			'account_id' => 985 ,
 		]);
 		$response->assertStatus(404);
@@ -119,7 +122,8 @@ class AccountTest extends TestCase {
 		$data = [
 			'account_id' => '' ,
 		];
-		$response = $this->postJson('/api/destroy' , $data);
+		$route = $this->getRoute("account/destroy");
+		$response = $this->postJson($route , $data);
 		$response->assertStatus(422)
 				 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
 																			  "errors.account_id" ,
@@ -138,7 +142,8 @@ class AccountTest extends TestCase {
 		$data = [
 			'account_id' => $account->getID() ,
 		];
-		$response = $this->postJson('/api/destroy' , $data);
+		$route = $this->getRoute('account/destroy');
+		$response = $this->postJson($route , $data);
 		$response->assertStatus(200);
 		$this->postJson('/api/destroy' , [
 			'account_id' => 985 ,
@@ -152,7 +157,8 @@ class AccountTest extends TestCase {
 	 * @return void
 	 */
 	public function tes_filter_account_without_authenticate () {
-		$response = $this->postJson('/api/filter');
+		$route = $this->getRoute('account/filter');
+		$response = $this->postJson($route);
 		$response->assertStatus(200)
 				 ->assertJson(function ( AssertableJson $json ) {
 					 $json->hasAll([ 'accounts.0.id' ]);

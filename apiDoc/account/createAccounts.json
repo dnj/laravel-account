@@ -1,0 +1,161 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "account",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000"
+    }
+  ],
+  "paths": {
+    "/api/accounts": {
+      "post": {
+        "summary": "",
+        "operationId": "post-api-accounts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Account"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "": {
+                    "type": "string"
+                  }
+                }
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "title": "string",
+                    "currency_id": "intger"
+                  }
+                }
+              }
+            }
+          },
+          "description": "paramters"
+        },
+        "description": "create account"
+      }
+    },
+    "/api/account": {
+      "post": {
+        "summary": "create account",
+        "tags": [
+          "account"
+        ],
+        "responses": {},
+        "operationId": "post-api-account"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "title": "Account",
+        "x-stoplight": {
+          "id": "zeadcamvbulul"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "currency_id": {
+            "type": "integer"
+          },
+          "can_send": {
+            "type": "boolean"
+          },
+          "can_receive": {
+            "type": "boolean"
+          },
+          "meta": {
+            "type": "array",
+            "items": {}
+          },
+          "status": {
+            "type": "boolean",
+            "default": true,
+            "deprecated": true
+          }
+        },
+        "required": [
+          "title",
+          "currency_id"
+        ]
+      }
+    },
+    "responses": {
+      "account": {
+        "description": "Example response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            },
+            "examples": {
+              "account": {
+                "value": {
+                  "id": 1,
+                  "title": "account1",
+                  "currency_id": 1,
+                  "can_send": true,
+                  "can_receive": false,
+                  "status": "active",
+                  "meta": [
+                    {
+                      "key": "value"
+                    }
+                  ],
+                  "user_id": 1
+                }
+              }
+            }
+          },
+          "application/xml": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

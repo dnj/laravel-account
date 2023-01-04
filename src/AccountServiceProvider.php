@@ -17,18 +17,31 @@ class AccountServiceProvider extends ServiceProvider {
 	}
 	
 	public function boot () {
-		$this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
-		Route::prefix(config('account.route_prefix'))
-			 ->middleware('api')
-			 ->group(function () {
-				 if ( config('account.route_enable') ) {
-					 $this->loadRoutesFrom(__DIR__ . '/routes/api.php');
-				 }
-			 });
+		$this->_loadRoutes();
+		$this->_loadMigrations();
 		if ( $this->app->runningInConsole() ) {
 			$this->publishes([
 								 __DIR__ . '/../config/account.php' => config_path('account.php') ,
 							 ] , 'config');
 		}
+	}
+	
+	private function _loadRoutes () {
+		if ( config('account.route_enable') ) {
+			Route::prefix(config('account.route_prefix'))
+				 ->middleware([
+								  'api' ,
+								  'auth' ,
+							  ])
+				 ->group(function () {
+					 if ( config('account.route_enable') ) {
+						 $this->loadRoutesFrom(__DIR__ . '/routes/api.php');
+					 }
+				 });
+		}
+	}
+	
+	private function _loadMigrations () {
+		$this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 	}
 }
