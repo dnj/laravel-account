@@ -15,7 +15,6 @@ class TransactionRequest extends FormRequest {
 	public function rules(): array
 	{
 		return [
-			'transaction_id' => ['required'],
 			'meta' => ['nullable','array'],
 		];
 	}

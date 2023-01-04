@@ -1,0 +1,125 @@
+{
+  "openapi": "3.1.0",
+  "x-stoplight": {
+    "id": "0ckffajby3nv1"
+  },
+  "info": {
+    "title": "transfer update",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000"
+    }
+  ],
+  "paths": {
+    "/api/transfer/": {
+      "parameters": [],
+      "put": {
+        "summary": "",
+        "operationId": "put-api-transfer",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/transanction"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "transactionId",
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/transanction"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "transanction": {
+        "title": "transanction",
+        "x-stoplight": {
+          "id": "ptoxyc0g9n56v"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "form_id": {
+            "type": "integer"
+          },
+          "to_id": {
+            "type": "integer"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "meta": {
+            "type": "array",
+            "items": {}
+          }
+        },
+        "required": [
+          "form_id",
+          "to_id"
+        ]
+      }
+    },
+    "responses": {
+      "transaction": {
+        "description": "Example response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            },
+            "examples": {
+              "Example 1": {
+                "value": {
+                  "id": "integer",
+                  "from_id": "integer",
+                  "to_id": "integer",
+                  "amount": "double",
+                  "meta": [
+                    {
+                      "key": "value"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

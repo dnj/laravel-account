@@ -51,29 +51,6 @@ class TransactionTest extends TestCase {
 				 $json->where('transaction.meta' , $data[ 'meta' ]);
 			 });
 	}
-	
-	/**
-	 * Testing validation update transfer
-	 */
-	public function test_validation_update_transfer () {
-		$USD = $this->createUSD();
-		$account1 = $this->createUSDAccount($USD);
-		$account2 = $this->createUSDAccount($USD);
-		$transaction = $this->getTransactionManager()
-							->transfer($account1->getID() , $account2->getID() , Number::formString('1.02') , [ 'key1' => 'value1' ] , true ,);
-		$data = [
-			'transaction_id' => '' ,
-			'meta' => [ 'transaction_key_1' => 'transaction_value_1' ] ,
-		];
-		$route = $this->getRoute('transaction/update');
-		$this->postJson($route , $data)
-			 ->assertStatus(422)
-			 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
-																		  'errors.transaction_id' ,
-																	  ])
-															 ->etc());
-	}
-	
 	/**
 	 * Testing update transfer
 	 */
@@ -84,38 +61,15 @@ class TransactionTest extends TestCase {
 		$transaction = $this->getTransactionManager()
 							->transfer($account1->getID() , $account2->getID() , Number::formString('1.02') , [ 'key1' => 'value1' ] , true ,);
 		$data = [
-			'transaction_id' => $transaction->id ,
 			'meta' => [ 'transaction_key_1' => 'transaction_value_1' ] ,
 		];
-		$route = $this->getRoute('transaction/update');
+		$route = $this->getRoute("transaction/update/{$transaction->id}");
 		$this->postJson($route , $data)
 			 ->assertStatus(200)
 			 ->assertJson(function ( AssertableJson $json ) use ( $data ) {
 				 $json->where('transaction.meta' , $data[ 'meta' ]);
 			 });
 	}
-	
-	/**
-	 * Testing validation rollback
-	 */
-	public function test_validation_rollback_transfer () {
-		$USD = $this->createUSD();
-		$account1 = $this->createUSDAccount($USD);
-		$account2 = $this->createUSDAccount($USD);
-		$transaction = $this->getTransactionManager()
-							->transfer($account1->getID() , $account2->getID() , Number::formString('1.02') , null , true);
-		$data = [
-			'transaction_id' => '' ,
-		];
-		$route = $this->getRoute('transaction/rollback');
-		$this->postJson($route , $data)
-			 ->assertStatus(422)
-			 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
-																		  'errors.transaction_id' ,
-																	  ])
-															 ->etc());
-	}
-	
 	/**
 	 * Testing rollback
 	 */
@@ -125,11 +79,8 @@ class TransactionTest extends TestCase {
 		$account2 = $this->createUSDAccount($USD);
 		$transaction = $this->getTransactionManager()
 							->transfer($account1->getID() , $account2->getID() , Number::formString('1.02') , null , true);
-		$data = [
-			'transaction_id' => $transaction->id ,
-		];
-		$route = $this->getRoute('transaction/rollback');
-		$response = $this->postJson($route , $data)
+		$route = $this->getRoute("transaction/rollback/{$transaction->id}");
+		$response = $this->postJson($route)
 						 ->assertStatus(200);
 		$this->assertSame($response[ 'transaction' ][ 'meta' ][ 'type' ] , 'rollback-transaction');
 	}
@@ -143,14 +94,11 @@ class TransactionTest extends TestCase {
 		$account2 = $this->createUSDAccount($USD);
 		$transaction = $this->getTransactionManager()
 							->transfer($account1->getID() , $account2->getID() , Number::formString('1.02') , null , true);
-		$data = [
-			'transaction_id' => $transaction->id ,
-		];
 		$account1->status = AccountStatus::DEACTIVE;
 		$account1->save();
 		$this->expectException(DisabledAccountException::class);
-		$route = $this->getRoute('transaction/rollback');
-		$this->postJson($route , $data);
+		$route = $this->getRoute("transaction/rollback/{$transaction->id}");
+		$this->postJson($route);
 	}
 	
 	/**
@@ -162,14 +110,11 @@ class TransactionTest extends TestCase {
 		$account2 = $this->createUSDAccount($USD);
 		$transaction = $this->getTransactionManager()
 							->transfer($account1->getID() , $account2->getID() , Number::formString('1.02') , null , true);
-		$data = [
-			'transaction_id' => $transaction->id ,
-		];
 		$account2->status = AccountStatus::DEACTIVE;
 		$account2->save();
 		$this->expectException(DisabledAccountException::class);
-		$route = $this->getRoute('transaction/rollback');
-		$this->postJson($route , $data);
+		$route = $this->getRoute("transaction/rollback/{$transaction->id}");
+		$this->postJson($route);
 	}
 	
 	/**

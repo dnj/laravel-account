@@ -10,6 +10,6 @@ Route::controller(\dnj\Account\Http\Controllers\TransactionController::class)
 	 ->prefix('transaction')
 	 ->group(function () {
 		 Route::post('transfer' , 'transfer');
-		 Route::post('update' , 'update');
-		 Route::post('rollback' , 'transactionRollBack');
+		 Route::put('transfer/{transactionId}' , 'update');
+		 Route::put('transfer/rollback/{transactionId}' , 'transactionRollBack');
 	 });

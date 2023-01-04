@@ -9,10 +9,10 @@ use dnj\Account\TransactionManager;
 use dnj\Number\Number;
 
 class TransactionController extends Controller {
-	public TransactionManager $transaction_manager;
+	protected TransactionManager $transactionManager;
 	
-	public function __construct ( TransactionManager $transaction_manager ) {
-		$this->transaction_manager = $transaction_manager;
+	public function __construct ( TransactionManager $transactionManager ) {
+		$this->transactionManager = $transactionManager;
 	}
 	
 	/**
@@ -27,41 +27,30 @@ class TransactionController extends Controller {
 		$amount = Number::formString($request->get('amount'));
 		$mate = $request->get('meta');
 		$force = $request->get('force');
-		$transaction = $this->transaction_manager->transfer($from_id , $to_id , $amount , $mate , $force);
+		$transaction = $this->transactionManager->transfer($from_id , $to_id , $amount , $mate , $force);
 		
-		return response()->json([
-									'transaction' => TransactionResource::make($transaction) ,
-								]);
+		return TransactionResource::make($transaction);
 	}
 	
 	/**
-	 * Updating Transaction
-	 *
+	 * @param                                               $transactionId
 	 * @param \dnj\Account\Http\Requests\TransactionRequest $request
-	 * @return \Illuminate\Http\JsonResponse|void
+	 * @return \dnj\Account\Http\Resources\TransactionResource
 	 */
-	public function update ( TransactionRequest $request ) {
-		$transaction_id = $request->get('transaction_id');
+	public function update ( $transactionId , TransactionRequest $request ) {
 		$meta = $request->get('meta');
-		$transaction = $this->transaction_manager->update($transaction_id , $meta);
+		$transaction = $this->transactionManager->update($transactionId , $meta);
 		
-		return response()->json([
-									'transaction' => TransactionResource::make($transaction) ,
-								]);
+		return TransactionResource::make($transaction);
 	}
 	
 	/**
-	 * Transaction Rollback
-	 *
-	 * @param \dnj\Account\Http\Requests\TransactionRequest $request
-	 * @return \Illuminate\Http\JsonResponse|void
+	 * @param $transactionId
+	 * @return \dnj\Account\Http\Resources\TransactionResource
 	 */
-	public function transactionRollBack ( TransactionRequest $request ) {
-		$transaction_id = $request->get('transaction_id');
-		$transaction = $this->transaction_manager->rollback($transaction_id);
+	public function transactionRollBack ( $transactionId ) {
+		$transaction = $this->transactionManager->rollback($transactionId);
 		
-		return response()->json([
-									'transaction' => TransactionResource::make($transaction) ,
-								]);
+		return TransactionResource::make($transaction);
 	}
 }
