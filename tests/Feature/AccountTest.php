@@ -14,13 +14,17 @@ class AccountTest extends TestCase {
 	 */
 	public function test_validation_for_createing_new_account () {
 		
+		
+		$this->postJson(route('accounts.store'))
+			 ->assertStatus(401);
+		$user = $this->createNewUser();
+		$this->actingAs($user);
 		$data = [
 			'title' => '' ,
 			'currency_id' => '' ,
 			'meta' => 'test' ,
 		];
-		$route = $this->getRoute('accounts/create');
-		$response = $this->postJson($route , $data);
+		$response = $this->postJson(route('accounts.store') , $data);
 		$response->assertStatus(422)
 				 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
 																			  "errors.title" ,
@@ -31,11 +35,16 @@ class AccountTest extends TestCase {
 	}
 	
 	/**
-	 * Testing create new account without authenticate
+	 * Testing create new account
 	 *
 	 * @return void
 	 */
-	public function test_create_new_account_without_authenticate () {
+	public function test_create_new_account () {
+		
+		$this->postJson(route('accounts.store'))
+			 ->assertStatus(401);
+		$user = $this->createNewUser();
+		$this->actingAs($user);
 		$USD = $this->createUSD();
 		$data = [
 			'title' => 'account1' ,
@@ -53,9 +62,8 @@ class AccountTest extends TestCase {
 				] ,
 			] ,
 		];
-		$route = $this->getRoute('accounts/create');
-		$response = $this->postJson($route , $data);
-		$response->assertStatus(200)
+		$response = $this->postJson(route('accounts.store') , $data);
+		$response->assertStatus(201)
 				 ->assertJson(function ( AssertableJson $json ) use ( $data ) {
 					 $json->where('account.title' , $data[ 'title' ]);
 					 $json->where('account.can_send' , $data[ 'can_send' ]);
@@ -65,70 +73,31 @@ class AccountTest extends TestCase {
 	}
 	
 	/**
-	 * Testing validation for update account
+	 * Testing  update account
 	 *
 	 * @return void
 	 */
-	public function test_validation_for_update_account () {
-		$data = [
-			'account_id' => '' ,
-		];
-		$route = $this->getRoute('accounts/update');
-		$response = $this->putJson($route , $data);
-		$response->assertStatus(422)
-				 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
-																			  'errors.account_id' ,
-																		  ])
-																 ->etc());
-	}
-	
-	/**
-	 * Testing update account without authenticate
-	 *
-	 * @return void
-	 */
-	public function tes_update_account_without_authenticate () {
-		$USD = $this->createUSD();
-		$account = $this->createUSDAccount($USD);
-		$data = [
-			'title' => 'USD Reserve 2' ,
-			'balance' => Number::fromInt(1) ,
-			'canSend' => 1 ,
-			'canReceive' => 0 ,
-			'currency_id' => $account->currency_id ,
-			'status' => AccountStatus::DEACTIVE->value ,
-		];
-		$route = $this->getRoute("accounts/update/{$account->id}");
-		$response = $this->postJson($route , $data);
-		$response->assertStatus(200)
-				 ->assertJson(function ( AssertableJson $json ) use ( $data ) {
-					 $json->where('account.title' , $data[ 'title' ]);
-					 $json->where('account.can_send' , $data[ 'canSend' ]);
-					 $json->where('account.can_receive' , $data[ 'canReceive' ]);
-					 $json->where('account.currency_id' , $data[ 'currency_id' ]);
-				 });
-		$response = $this->postJson($route , [
-			'account_id' => 985 ,
-		]);
-		$response->assertStatus(404);
-	}
-	
-	/**
-	 * Testing validation delete account
-	 *
-	 * @return void
-	 */
-	public function tes_validation_delete_account () {
-		$data = [
-			'account_id' => '' ,
-		];
-		$route = $this->getRoute("account/destroy");
-		$response = $this->postJson($route , $data);
-		$response->assertStatus(422)
-				 ->assertJson(fn( AssertableJson $json ) => $json->hasAll([
-																			  "errors.account_id" ,
-																		  ])
-																 ->etc());
+	public function test_update_account () {
+		
+		$user = $this->createNewUser();
+		$account = $this->createAccount();
+		$this->putJson(route('accounts.update' , [ 'account' => 2 ]))
+			 ->assertStatus(401);
+		$this->actingAs($user);
+		$this->putJson(route('accounts.update' , [ 'account' => 2 ]))
+			 ->assertStatus(404);
+		$this->putJson(route('accounts.update' , [ 'account' => 1 ]) , [
+			'meta' => [
+				[
+					'key' => 'value' ,
+				] ,
+			] ,
+		])
+			 ->assertStatus(200)
+			 ->assertJson(function ( AssertableJson $json ) use ( $account ) {
+				 $json->where('account.title' , $account[ 0 ]->title);
+				 $json->where('account.currency_id' , $account[ 0 ]->currency_id);
+			 });
 	}
 	
 	/**
@@ -136,19 +105,19 @@ class AccountTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function tes_delete_account () {
-		$USD = $this->createUSD();
-		$account = $this->createUSDAccount($USD);
-		$data = [
-			'account_id' => $account->getID() ,
-		];
-		$route = $this->getRoute('account/destroy');
-		$response = $this->postJson($route , $data);
-		$response->assertStatus(200);
-		$this->postJson('/api/destroy' , [
-			'account_id' => 985 ,
-		])
+	public function test_delete_account () {
+		$user = $this->createNewUser();
+		$this->createAccount();
+		$this->deleteJson(route('accounts.destroy' , [ 'account' => 2 ]))
+			 ->assertStatus(401);
+		$this->actingAs($user);
+		$this->deleteJson(route('accounts.destroy' , [ 'account' => 2 ]))
 			 ->assertStatus(404);
+		$this->deleteJson(route('accounts.destroy' , [ 'account' => 1 ]))
+			 ->assertStatus(200)
+			 ->assertJson([
+							  'message' => 'Account deleted successfully' ,
+						  ]);
 	}
 	
 	/**
@@ -156,14 +125,18 @@ class AccountTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	public function tes_filter_account_without_authenticate () {
-		$route = $this->getRoute('account/filter');
-		$response = $this->postJson($route);
-		$response->assertStatus(200)
-				 ->assertJson(function ( AssertableJson $json ) {
-					 $json->hasAll([ 'accounts.0.id' ]);
-					 $json->hasAll([ 'accounts.0.title' ]);
-					 $json->hasAll([ 'accounts.0.currency_id' ]);
-				 });
+	public function test_filter_account () {
+		$user = $this->createNewUser();
+		$this->createAccount(20);
+		$this->getJson(route('accounts.index'))
+			 ->assertStatus(401);
+		$this->actingAs($user);
+		$this->getJson(route('accounts.index'))
+			 ->assertStatus(200)
+			 ->assertJson(function ( AssertableJson $json ) {
+				 $json->hasAll([ 'data.0.id' ]);
+				 $json->hasAll([ 'data.0.title' ]);
+				 $json->hasAll([ 'data.0.currency_id' ]);
+			 });
 	}
 }

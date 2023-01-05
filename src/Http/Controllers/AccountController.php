@@ -7,6 +7,7 @@ use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\Http\Requests\AccountRequest;
 use dnj\Account\Http\Requests\CreateNewAccountRequest;
 use dnj\Account\Http\Resources\AccountResource;
+use dnj\Account\Models\Account;
 use Illuminate\Http\Request;
 
 class AccountController extends Controller {
@@ -16,7 +17,13 @@ class AccountController extends Controller {
 		$this->accountManager = $accountManager;
 	}
 	
-	public function create ( CreateNewAccountRequest $request ) {
+	public function index ( Request $request ) {
+		$collection = $this->accountManager->findByUser(auth()->user()->id);
+		
+		return AccountResource::collection($collection);
+	}
+	
+	public function store ( CreateNewAccountRequest $request ) {
 		$title = $request->get('title');
 		$currency_id = $request->get('currency_id');
 		$can_send = $request->get('can_send');
@@ -28,7 +35,7 @@ class AccountController extends Controller {
 		return AccountResource::make($account);
 	}
 	
-	public function update ( $accountId , AccountRequest $request ) {
+	public function update ( Account $account , AccountRequest $request ) {
 		$data = $request->only([
 								   'title' ,
 								   'user_id' ,
@@ -38,23 +45,16 @@ class AccountController extends Controller {
 								   'meta' ,
 							   ]);
 		$data[ 'user_id' ] = auth()->user()->id;
-		$this->accountManager->update($accountId , $data);
-		$account = $this->accountManager->getByID($accountId);
+		$this->accountManager->update($account->id , $data);
 		
 		return AccountResource::make($account);
 	}
 	
-	public function destroy ( $accountId ) {
-		$this->accountManager->delete($accountId);
+	public function destroy ( Account $account ) {
+		$this->accountManager->delete($account->id);
 		
 		return response()->json([
 									'message' => 'Account deleted successfully' ,
 								]);
-	}
-	
-	public function filter ( Request $request ) {
-		$collection = $this->accountManager->findByUser(auth()->user()->id);
-		
-		return AccountResource::collection($collection);
 	}
 }
