@@ -16,7 +16,7 @@ class AccountRequest extends FormRequest {
 	public function rules(): array
 	{
 		return [
-			'account_id' => ['required'],
+			'mate' => ['nullable','array'],
 		];
 	}
 }

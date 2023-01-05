@@ -1,6 +1,6 @@
 <?php
 return [
 	'user_model' => null,
-	'route_prefix' => 'api',
+	'route_prefix' => null,
 	'route_enable' => true
 ];

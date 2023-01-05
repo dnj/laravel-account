@@ -9,6 +9,7 @@ use dnj\Account\Contracts\IHoldingManager;
 use dnj\Account\Contracts\ITransactionManager;
 use dnj\Account\HoldingManager;
 use dnj\Account\Models\Account;
+use dnj\Account\Models\User;
 use dnj\Account\TransactionManager;
 use dnj\Currency\Contracts\ICurrency;
 use dnj\Currency\Contracts\ICurrencyManager;
@@ -18,6 +19,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TestCase extends \Orchestra\Testbench\TestCase {
 	use RefreshDatabase;
+	
+	public function setUp (): void {
+		parent::setUp();
+		$this->withFactories(__DIR__ . '/../database/factories');
+	}
+	
+	protected function defineDatabaseMigrations () {
+		$this->loadLaravelMigrations([ '--database' => 'testing' ]);
+		$this->artisan('migrate' , [ '--database' => 'testing' ])
+			 ->run();
+	}
 	
 	protected function getPackageProviders ( $app ) {
 		return [
@@ -68,5 +80,20 @@ class TestCase extends \Orchestra\Testbench\TestCase {
 		}
 		
 		return $route;
+	}
+	
+	public function createNewUser () {
+		$user = factory(User::class)->create();
+		
+		return $user;
+	}
+	
+	public function createAccount ($count = 1) {
+		$USD = $this->createUSD();
+		$account = factory(Account::class,$count)->create([
+													   'currency_id' => $USD->id ,
+												   ]);
+		
+		return $account;
 	}
 }

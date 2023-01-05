@@ -5,6 +5,7 @@ namespace dnj\Account;
 use dnj\Account\Contracts\IAccountManager;
 use dnj\Account\Contracts\IHoldingManager;
 use dnj\Account\Contracts\ITransactionManager;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,6 +33,7 @@ class AccountServiceProvider extends ServiceProvider {
 				 ->middleware([
 								  'api' ,
 								  'auth' ,
+								  SubstituteBindings::class ,
 							  ])
 				 ->group(function () {
 					 if ( config('account.route_enable') ) {

@@ -1,11 +1,7 @@
 <?php
-Route::controller(\dnj\Account\Http\Controllers\AccountController::class)
-	 ->group(function () {
-		 Route::post('accounts' , 'create');
-		 Route::get('accounts' , 'filter');
-		 Route::put('accounts/{accountId}' , 'update');
-		 Route::delete('accounts/{accountId}' , 'destroy');
-	 });
+use dnj\Account\Http\Controllers\AccountController;
+
+Route::resource('accounts',AccountController::class);
 Route::controller(\dnj\Account\Http\Controllers\TransactionController::class)
 	 ->prefix('transaction')
 	 ->group(function () {
