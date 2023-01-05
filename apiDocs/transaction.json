@@ -1,0 +1,255 @@
+{
+  "openapi": "3.1.0",
+  "x-stoplight": {
+    "id": "0ckffajby3nv1"
+  },
+  "info": {
+    "title": "transfer rollback",
+    "version": "1.0"
+  },
+  "servers": [],
+  "paths": {
+    "/transactions/transfer": {
+      "post": {
+        "summary": "transfer",
+        "tags": [],
+        "responses": {},
+        "operationId": "post-transactions-transfer"
+      }
+    },
+    "/transaction/rollback": {
+      "parameters": [],
+      "post": {
+        "summary": "",
+        "operationId": "post-transaction",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/transanction"
+                },
+                "examples": {
+                  "transaction": {
+                    "value": {
+                      "id": "string",
+                      "form_id": 0,
+                      "to_id": 0,
+                      "amount": 0,
+                      "meta": [
+                        null
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/transanction"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "id": "string",
+                    "form_id": 1,
+                    "to_id": 1,
+                    "amount": 0,
+                    "meta": [
+                      null
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "transfer transaction"
+      },
+      "put": {
+        "summary": "",
+        "operationId": "put-transaction",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/transanction"
+                },
+                "examples": {
+                  "transaction": {
+                    "value": {
+                      "id": "string",
+                      "form_id": 0,
+                      "to_id": 0,
+                      "amount": 0,
+                      "meta": [
+                        null
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "description": "update transaction",
+        "parameters": [
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "transactionId",
+            "required": true
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {}
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/transanction"
+              },
+              "examples": {}
+            }
+          },
+          "description": ""
+        }
+      },
+      "options": {
+        "summary": "",
+        "operationId": "options-transaction-rollback",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/transanction"
+                },
+                "examples": {
+                  "transaction": {
+                    "value": {
+                      "id": "string",
+                      "form_id": 0,
+                      "to_id": 0,
+                      "amount": 0,
+                      "meta": [
+                        null
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "description": "rollback transaction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/transanction"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "transactionId",
+            "required": true
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "transanction": {
+        "title": "transanction",
+        "x-stoplight": {
+          "id": "ptoxyc0g9n56v"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "form_id": {
+            "type": "integer"
+          },
+          "to_id": {
+            "type": "integer"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "meta": {
+            "type": "array",
+            "items": {}
+          }
+        },
+        "required": [
+          "form_id",
+          "to_id"
+        ]
+      }
+    },
+    "responses": {
+      "transaction": {
+        "description": "Example response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            },
+            "examples": {
+              "Example 1": {
+                "value": {
+                  "id": "integer",
+                  "from_id": "integer",
+                  "to_id": "integer",
+                  "amount": "double",
+                  "meta": [
+                    {
+                      "key": "value"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,11 +1,7 @@
 <?php
 use dnj\Account\Http\Controllers\AccountController;
+use dnj\Account\Http\Controllers\TransactionController;
 
 Route::resource('accounts',AccountController::class);
-Route::controller(\dnj\Account\Http\Controllers\TransactionController::class)
-	 ->prefix('transaction')
-	 ->group(function () {
-		 Route::post('transfer' , 'transfer');
-		 Route::put('transfer/{transactionId}' , 'update');
-		 Route::put('transfer/rollback/{transactionId}' , 'transactionRollBack');
-	 });
+Route::post('transaction/rollback/{transaction}',[TransactionController::class,'transactionRollBack'])->name('transaction.rollback');
+Route::resource('transaction',TransactionController::class);

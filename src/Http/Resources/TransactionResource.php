@@ -5,6 +5,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class TransactionResource extends JsonResource {
 	
+	
+	public static $wrap = 'transaction';
 	/**
 	 * Transform the resource into an array.
 	 *
