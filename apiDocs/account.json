@@ -1,0 +1,268 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "account",
+    "version": "1.0"
+  },
+  "servers": [],
+  "paths": {
+    "/accounts/{accountId}": {
+      "get": {
+        "summary": "filter account by user id",
+        "tags": [
+          "account"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "operationId": "get-accounts",
+        "description": "filter account by user id",
+        "deprecated": true
+      },
+      "post": {
+        "summary": "",
+        "operationId": "post-accounts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                },
+                "examples": {
+                  "account": {
+                    "value": {
+                      "id": "string",
+                      "title": "string",
+                      "currency_id": 0,
+                      "can_send": true,
+                      "can_receive": true,
+                      "meta": [
+                        null
+                      ],
+                      "status": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "description": "create new account by user id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Account"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "id": "string",
+                    "title": "string",
+                    "currency_id": 0,
+                    "can_send": true,
+                    "can_receive": true,
+                    "meta": [
+                      null
+                    ],
+                    "status": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "number"
+          },
+          "name": "accountId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "put": {
+        "summary": "",
+        "operationId": "put-accounts-accountId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                },
+                "examples": {
+                  "account": {
+                    "value": {
+                      "id": "string",
+                      "title": "string",
+                      "currency_id": 0,
+                      "can_send": true,
+                      "can_receive": true,
+                      "meta": [
+                        null
+                      ],
+                      "status": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "description": "update account by account id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Account"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "",
+        "operationId": "delete-accounts-accountId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "examples": {
+                  "Example 1": {
+                    "value": {
+                      "message": "Account deleted successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        },
+        "description": "delete account by account id"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Account": {
+        "title": "Account",
+        "x-stoplight": {
+          "id": "zeadcamvbulul"
+        },
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "currency_id": {
+            "type": "integer"
+          },
+          "can_send": {
+            "type": "boolean"
+          },
+          "can_receive": {
+            "type": "boolean"
+          },
+          "meta": {
+            "type": "array",
+            "items": {}
+          },
+          "status": {
+            "type": "boolean",
+            "default": true,
+            "deprecated": true
+          }
+        },
+        "required": [
+          "title",
+          "currency_id"
+        ]
+      }
+    },
+    "responses": {
+      "account": {
+        "description": "Example response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "properties": {
+                "id": {
+                  "type": "string"
+                }
+              }
+            },
+            "examples": {
+              "account": {
+                "value": {
+                  "id": 1,
+                  "title": "account1",
+                  "currency_id": 1,
+                  "can_send": true,
+                  "can_receive": false,
+                  "status": "active",
+                  "meta": [
+                    {
+                      "key": "value"
+                    }
+                  ],
+                  "user_id": 1
+                }
+              }
+            }
+          },
+          "application/xml": {
+            "schema": {
+              "type": "object",
+              "properties": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

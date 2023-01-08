@@ -4,18 +4,18 @@ namespace dnj\Account\Tests;
 
 use dnj\Account\Exceptions\BalanceInsufficientException;
 use dnj\Account\Exceptions\MultipleAccountOperationException;
+use dnj\Account\Models\Account;
 use dnj\Account\Models\Holding;
+use dnj\Currency\Models\Currency;
 use dnj\Number\Number;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use InvalidArgumentException;
 
 class HoldingManagerTest extends TestCase
 {
     public function testAcquire()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
 
         $now = time();
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(3), null, true);
@@ -45,9 +45,8 @@ class HoldingManagerTest extends TestCase
 
     public function testAcquireBalanceInsufficient()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
 
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(3), null, true);
 
@@ -62,9 +61,9 @@ class HoldingManagerTest extends TestCase
 
     public function testRelease()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
+
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(3), null, true);
 
         $holding = $this->getHoldingManager()->acquire($account->getID(), Number::fromInt(2), null);
@@ -79,9 +78,9 @@ class HoldingManagerTest extends TestCase
 
     public function testReleaseMultiple()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
+
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(4), null, true);
 
         $holding1 = $this->getHoldingManager()->acquire($account->getID(), Number::fromInt(1), null);
@@ -99,9 +98,9 @@ class HoldingManagerTest extends TestCase
 
     public function testReleaseMultipleWithInvalidID()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
+
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(4), null, true);
 
         $holding1 = $this->getHoldingManager()->acquire($account->getID(), Number::fromInt(1), null);
@@ -113,10 +112,9 @@ class HoldingManagerTest extends TestCase
 
     public function testReleaseMultipleWithMultipleAccount()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account1, $account2] = Account::factory(3)->withCurrency($USD)->create();
+
         $this->getTransactionManager()->transfer($system->getID(), $account1->getID(), Number::fromInt(4), null, true);
         $this->getTransactionManager()->transfer($system->getID(), $account2->getID(), Number::fromInt(4), null, true);
 
@@ -130,9 +128,9 @@ class HoldingManagerTest extends TestCase
 
     public function testReleaseAll()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
+
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(4), null, true);
 
         $this->getHoldingManager()->acquire($account->getID(), Number::fromInt(1), null);
@@ -153,9 +151,9 @@ class HoldingManagerTest extends TestCase
 
     public function testUpdate()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD);
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
+
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(3), null, true);
         $holding = $this->getHoldingManager()->acquire($account->getID(), Number::fromInt(2), null);
         $this->assertNull($holding->getMeta());
@@ -175,7 +173,7 @@ class HoldingManagerTest extends TestCase
         ]);
         $this->assertSame(1, $holding->getAmount()->getValue());
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->getHoldingManager()->update($holding->getID(), [
             'amount' => Number::fromInt(-1),
         ]);
@@ -183,9 +181,14 @@ class HoldingManagerTest extends TestCase
 
     public function testRecalucateHoldingBalance()
     {
-        $USD = $this->createUSD();
-        $system = $this->createUSDAccount($USD, 1);
-        $account = $this->createUSDAccount($USD, 1);
+        $USD = Currency::factory()->asUSD()->create();
+        [$system, $account] = Account::factory(2)
+            ->withCurrency($USD)
+            ->withHolding(0)
+            ->withBalance(0)
+            ->withUserId(1)
+            ->create();
+
         $this->assertSame(0, $account->getHoldingBalance()->getValue());
 
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(5), null, true);

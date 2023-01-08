@@ -4,9 +4,8 @@ namespace dnj\Account\Exceptions;
 
 use dnj\Account\Contracts\IAccount;
 use dnj\Number\Contracts\INumber;
-use Exception;
 
-class BalanceInsufficientException extends Exception
+class BalanceInsufficientException extends \Exception
 {
     public function __construct(
         public readonly IAccount $account,

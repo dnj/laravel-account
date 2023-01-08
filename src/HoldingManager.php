@@ -13,7 +13,6 @@ use dnj\Number\Number;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 class HoldingManager implements IHoldingManager
 {
@@ -78,7 +77,7 @@ class HoldingManager implements IHoldingManager
             $diffHoldingAmount = null;
             if (isset($changes['amount'])) {
                 if ($changes['amount']->lte(0)) {
-                    throw new InvalidArgumentException('new amount of holding cannot be non-positive number');
+                    throw new \InvalidArgumentException('new amount of holding cannot be non-positive number');
                 }
                 $diffHoldingAmount = $changes['amount']->sub($holding->amount);
                 if (!$diffHoldingAmount->isEqual(0)) {
