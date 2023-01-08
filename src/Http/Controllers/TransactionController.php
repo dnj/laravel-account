@@ -2,66 +2,73 @@
 
 namespace dnj\Account\Http\Controllers;
 
-use dnj\Account\Http\Requests\CreateNewTransactionRequest;
-use dnj\Account\Http\Requests\TransactionRequest;
+use dnj\Account\Http\Requests\TransactionSearchRequest;
+use dnj\Account\Http\Requests\TransactionStoreRequest;
+use dnj\Account\Http\Requests\TransactionUpdateRequest;
 use dnj\Account\Http\Resources\TransactionResource;
+use dnj\Account\Models\Account;
+use dnj\Account\Models\Transaction;
 use dnj\Account\TransactionManager;
 use dnj\Number\Number;
 
-class TransactionController extends Controller {
-	public TransactionManager $transaction_manager;
-	
-	public function __construct ( TransactionManager $transaction_manager ) {
-		$this->transaction_manager = $transaction_manager;
+class TransactionController extends Controller
+{
+
+	public function __construct(protected TransactionManager $transactionManager)
+	{
 	}
-	
-	/**
-	 * Transfer
-	 *
-	 * @param \dnj\Account\Http\Requests\CreateNewTransactionRequest $request
-	 * @return \Illuminate\Http\JsonResponse
-	 */
-	public function transfer ( CreateNewTransactionRequest $request ) {
-		$from_id = $request->get('from_id');
-		$to_id = $request->get('to_id');
-		$amount = Number::formString($request->get('amount'));
-		$mate = $request->get('meta');
-		$force = $request->get('force');
-		$transaction = $this->transaction_manager->transfer($from_id , $to_id , $amount , $mate , $force);
-		
-		return response()->json([
-									'transaction' => TransactionResource::make($transaction) ,
-								]);
+
+	public function index(Account $account, TransactionSearchRequest $request)
+	{
+		$data = $request->validated();
+
+		$q = Transaction::query()
+			->where('from_id', $account->id)
+			->orWhere('to_id', $account->id)
+			->orderBy("id", "DESC");
+		if (isset($data['created_from'])) {
+			$q->where("created_at", ">=", $data['created_from']);
+		}
+		if (isset($data['created_to'])) {
+			$q->where("created_at", "<", $data['created_to']);
+		}
+		if (isset($data['amount_from'])) {
+			$q->where("amount", ">=", $data['amount_from']);
+		}
+		if (isset($data['amount_to'])) {
+			$q->where("amount", "<", $data['amount_to']);
+		}
+
+		return new TransactionResource($q->cursorPaginate());
 	}
-	
-	/**
-	 * Updating Transaction
-	 *
-	 * @param \dnj\Account\Http\Requests\TransactionRequest $request
-	 * @return \Illuminate\Http\JsonResponse|void
-	 */
-	public function update ( TransactionRequest $request ) {
-		$transaction_id = $request->get('transaction_id');
-		$meta = $request->get('meta');
-		$transaction = $this->transaction_manager->update($transaction_id , $meta);
-		
-		return response()->json([
-									'transaction' => TransactionResource::make($transaction) ,
-								]);
+
+	public function store(TransactionStoreRequest $request)
+	{
+		$data = $request->validated();
+		$data['amount'] = Number::formString($data['amount']);
+		$transaction = $this->transactionManager->transfer(
+			$data['from_id'],
+			$data['to_id'],
+			$data['amount'],
+			$data['meta'] ?? null,
+			$data['force'] ?? false,
+		);
+
+		return new TransactionResource($transaction);
 	}
-	
-	/**
-	 * Transaction Rollback
-	 *
-	 * @param \dnj\Account\Http\Requests\TransactionRequest $request
-	 * @return \Illuminate\Http\JsonResponse|void
-	 */
-	public function transactionRollBack ( TransactionRequest $request ) {
-		$transaction_id = $request->get('transaction_id');
-		$transaction = $this->transaction_manager->rollback($transaction_id);
-		
-		return response()->json([
-									'transaction' => TransactionResource::make($transaction) ,
-								]);
+
+	public function update(Transaction $transaction, TransactionUpdateRequest $request)
+	{
+		$data = $request->validated();
+		$transaction = $this->transactionManager->update($transaction->id, $data['meta']);
+
+		return new TransactionResource($transaction);
+	}
+
+	public function destroy(Transaction $transaction)
+	{
+		$rollback = $this->transactionManager->rollback($transaction->id);
+
+		return new TransactionResource($rollback);
 	}
 }

@@ -1,8 +1,11 @@
 <?php
 
-namespace dnj\Account\Tests;
+namespace dnj\Account\Tests\Feature;
 
 use dnj\Account\Contracts\AccountStatus;
+use dnj\Account\Models\Account;
+use dnj\Account\Tests\TestCase;
+use dnj\Currency\Models\Currency;
 use dnj\Number\Number;
 
 class AccountManagerTest extends TestCase
@@ -10,8 +13,8 @@ class AccountManagerTest extends TestCase
     public function testCreate()
     {
         $now = time();
-        $USD = $this->createUSD();
-        $account = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account = $this->getAccountManager()->create('USD Reserve', $USD->getID());
         $this->assertSame($USD->getID(), $account->getCurrencyID());
         $this->assertSame($USD->getID(), $account->getCurrency()->getID());
         $this->assertSame(0, $account->getBalance()->getValue());
@@ -21,17 +24,24 @@ class AccountManagerTest extends TestCase
 
     public function testGetByID()
     {
-        $USD = $this->createUSD();
-        $account = $this->createUSDAccount($USD);
+        $account = Account::factory()->withUSD()->withoutUser()->create();
         $accountCopy = $this->getAccountManager()->getByID($account->getID());
         $this->assertSame($account->getID(), $accountCopy->getID());
     }
 
     public function testFinds()
     {
-        $USD = $this->createUSD();
-        $systemAccount = $this->createUSDAccount($USD, null);
-        $userAccount = $this->createUSDAccount($USD, 2);
+        $USD = Currency::factory()
+            ->asUSD()
+            ->create();
+        $systemAccount = Account::factory()
+            ->withCurrency($USD)
+            ->withoutUser()
+            ->create();;
+        $userAccount = Account::factory()
+            ->withCurrency($USD)
+            ->withUserId(2)
+            ->create();
 
         $accounts = $this->getAccountManager()->findByUser(2);
         $this->assertSame(1, $accounts->count());
@@ -47,14 +57,7 @@ class AccountManagerTest extends TestCase
 
     public function testUpdate()
     {
-        $USD = $this->createUSD();
-        $account = $this->createUSDAccount($USD);
-        $this->assertSame('USD Reserve', $account->getTitle());
-        $this->assertNull($account->getUserID());
-        $this->assertSame(AccountStatus::ACTIVE, $account->getStatus());
-        $this->assertTrue($account->getCanSend());
-        $this->assertTrue($account->getCanReceive());
-        $this->assertNull($account->getMeta());
+        $account = Account::factory()->withUSD()->withoutUser()->create();
 
         $account = $this->getAccountManager()->update($account->getID(), [
             'title' => 'Test Account',
@@ -77,20 +80,26 @@ class AccountManagerTest extends TestCase
 
     public function testDelete()
     {
-        $USD = $this->createUSD();
-        $account = $this->createUSDAccount($USD);
+        $account = Account::factory()->create();
         $this->getAccountManager()->delete($account->getID());
         $this->assertTrue(true);
     }
 
     public function testRecalucateBalance()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD, 1);
-        $account2 = $this->createUSDAccount($USD, 1);
-
-        $this->assertSame(0, $account1->getBalance()->getValue());
-        $this->assertSame(0, $account2->getBalance()->getValue());
+        $USD = Currency::factory()
+            ->asUSD()
+            ->create();
+        $account1 = Account::factory()
+            ->withCurrency($USD)
+            ->withUserId(1)
+            ->withBalance(0)
+            ->create();
+        $account2 = Account::factory()
+            ->withCurrency($USD)
+            ->withUserId(1)
+            ->withBalance(0)
+            ->create();
 
         $this->getTransactionManager()->transfer($account1->getID(), $account2->getID(), Number::fromInput('1.02'), null, true);
         $this->getTransactionManager()->transfer($account1->getID(), $account2->getID(), Number::fromInput('2.05'), null, true);
