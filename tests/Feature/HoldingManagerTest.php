@@ -9,7 +9,6 @@ use dnj\Account\Models\Holding;
 use dnj\Currency\Models\Currency;
 use dnj\Number\Number;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use InvalidArgumentException;
 
 class HoldingManagerTest extends TestCase
 {
@@ -154,7 +153,7 @@ class HoldingManagerTest extends TestCase
     {
         $USD = Currency::factory()->asUSD()->create();
         [$system, $account] = Account::factory(2)->withCurrency($USD)->create();
-        
+
         $this->getTransactionManager()->transfer($system->getID(), $account->getID(), Number::fromInt(3), null, true);
         $holding = $this->getHoldingManager()->acquire($account->getID(), Number::fromInt(2), null);
         $this->assertNull($holding->getMeta());
@@ -174,7 +173,7 @@ class HoldingManagerTest extends TestCase
         ]);
         $this->assertSame(1, $holding->getAmount()->getValue());
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->getHoldingManager()->update($holding->getID(), [
             'amount' => Number::fromInt(-1),
         ]);

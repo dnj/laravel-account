@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model implements ITransaction
 {
+    use HasFactory;
+
     protected static function newFactory()
     {
         return TransactionFactory::new();
     }
-
-    use HasFactory;
 
     protected $casts = [
         'amount' => Number::class,

@@ -26,29 +26,29 @@ class AccountFactory extends Factory
         $userModel = $this->getUserModel() ?? User::class;
 
         return [
-			'title' => fake()->sentence(3),
-			'user_id' => $userModel::factory(),
-			'balance' => Number::fromInt(0),
+            'title' => fake()->sentence(3),
+            'user_id' => $userModel::factory(),
+            'balance' => Number::fromInt(0),
             'holding' => Number::fromInt(0),
-			'currency_id' => Currency::factory(),
-			'can_send' => true,
-			'can_receive' => true,
-			'status' => AccountStatus::ACTIVE,
-			'meta' => null,
+            'currency_id' => Currency::factory(),
+            'can_send' => true,
+            'can_receive' => true,
+            'status' => AccountStatus::ACTIVE,
+            'meta' => null,
         ];
     }
 
     public function withTitle(string $title)
     {
         return $this->state(fn () => [
-			'title' => $title,
+            'title' => $title,
         ]);
     }
 
     public function withBalance(string|int|float|INumber $balance)
     {
         return $this->state(fn () => [
-			'balance' => Number::fromInput($balance),
+            'balance' => Number::fromInput($balance),
         ]);
     }
 
@@ -76,7 +76,7 @@ class AccountFactory extends Factory
     public function withCurrency(Currency|CurrencyFactory $currency)
     {
         return $this->state(fn () => [
-			'currency_id' => $currency,
+            'currency_id' => $currency,
         ]);
     }
 
@@ -93,21 +93,21 @@ class AccountFactory extends Factory
     public function cantSend(bool $canSend = false)
     {
         return $this->state(fn () => [
-			'can_send' => $canSend,
+            'can_send' => $canSend,
         ]);
     }
 
     public function cantReceive(bool $canReceive = false)
     {
         return $this->state(fn () => [
-			'can_receive' => $canReceive,
+            'can_receive' => $canReceive,
         ]);
     }
 
     public function withStatus(AccountStatus $status)
     {
         return $this->state(fn () => [
-			'status' => $status,
+            'status' => $status,
         ]);
     }
 
@@ -116,10 +116,10 @@ class AccountFactory extends Factory
         return $this->withStatus(AccountStatus::DEACTIVE);
     }
 
-	public function withMeta(mixed $meta)
-	{
-		return $this->state(fn () => [
-			'meta' => $meta,
-		]);
-	}
+    public function withMeta(mixed $meta)
+    {
+        return $this->state(fn () => [
+            'meta' => $meta,
+        ]);
+    }
 }

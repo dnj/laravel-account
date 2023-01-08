@@ -37,7 +37,7 @@ class AccountManagerTest extends TestCase
         $systemAccount = Account::factory()
             ->withCurrency($USD)
             ->withoutUser()
-            ->create();;
+            ->create();
         $userAccount = Account::factory()
             ->withCurrency($USD)
             ->withUserId(2)
