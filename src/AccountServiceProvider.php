@@ -5,7 +5,6 @@ namespace dnj\Account;
 use dnj\Account\Contracts\IAccountManager;
 use dnj\Account\Contracts\IHoldingManager;
 use dnj\Account\Contracts\ITransactionManager;
-use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,34 +20,21 @@ class AccountServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        $this->_loadRoutes();
-        $this->_loadMigrations();
+        $this->loadRoutes();
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                                 __DIR__.'/../config/account.php' => config_path('account.php'),
-                             ], 'config');
+                __DIR__.'/../config/account.php' => config_path('account.php'),
+            ], 'config');
         }
     }
 
-    private function _loadRoutes()
+    private function loadRoutes()
     {
         if (config('account.route_enable')) {
-            Route::prefix(config('account.route_prefix'))
-                 ->middleware([
-                                  'api',
-                                  'auth',
-                                  SubstituteBindings::class,
-                              ])
-                 ->group(function () {
-                     if (config('account.route_enable')) {
-                         $this->loadRoutesFrom(__DIR__.'/routes/api.php');
-                     }
-                 });
+            Route::prefix(config('account.route_prefix'))->group(function () {
+                $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+            });
         }
-    }
-
-    private function _loadMigrations()
-    {
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 }
