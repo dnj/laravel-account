@@ -2,19 +2,20 @@
 
 namespace dnj\Account\Http\Controllers;
 
-use dnj\Account\Http\Requests\CreateNewTransactionRequest;
-use dnj\Account\Http\Requests\TransactionRequest;
+use dnj\Account\Http\Requests\TransactionStoreRequest;
+use dnj\Account\Http\Requests\TransactionUpdateRequest;
 use dnj\Account\Http\Resources\TransactionResource;
+use dnj\Account\Models\Transaction;
 use dnj\Account\TransactionManager;
 use dnj\Number\Number;
 
 class TransactionController extends Controller
 {
-    public TransactionManager $transaction_manager;
+    public TransactionManager $transactionManager;
 
-    public function __construct(TransactionManager $transaction_manager)
+    public function __construct(TransactionManager $transactionManager)
     {
-        $this->transaction_manager = $transaction_manager;
+        $this->transactionManager = $transactionManager;
     }
 
     /**
@@ -22,18 +23,13 @@ class TransactionController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function transfer(CreateNewTransactionRequest $request)
+    public function store(TransactionStoreRequest $request)
     {
-        $from_id = $request->get('from_id');
-        $to_id = $request->get('to_id');
-        $amount = Number::formString($request->get('amount'));
-        $mate = $request->get('meta');
-        $force = $request->get('force');
-        $transaction = $this->transaction_manager->transfer($from_id, $to_id, $amount, $mate, $force);
+        $data = $request->validated();
+        $data['amount'] = Number::formString($data['amount']);
+        $transaction = $this->transactionManager->transfer($data['from_id'], $data['to_id'], $data['amount'], $data['meta'] ?? null, $data['force'] ?? false);
 
-        return response()->json([
-                                    'transaction' => TransactionResource::make($transaction),
-                                ]);
+        return TransactionResource::make($transaction);
     }
 
     /**
@@ -41,15 +37,12 @@ class TransactionController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse|void
      */
-    public function update(TransactionRequest $request)
+    public function update(Transaction $transaction, TransactionUpdateRequest $request)
     {
-        $transaction_id = $request->get('transaction_id');
-        $meta = $request->get('meta');
-        $transaction = $this->transaction_manager->update($transaction_id, $meta);
+        $data = $request->validated();
+        $transaction = $this->transactionManager->update($transaction->id, $data['meta']);
 
-        return response()->json([
-                                    'transaction' => TransactionResource::make($transaction),
-                                ]);
+        return TransactionResource::make($transaction);
     }
 
     /**
@@ -57,13 +50,10 @@ class TransactionController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse|void
      */
-    public function transactionRollBack(TransactionRequest $request)
+    public function destroy(Transaction $transaction)
     {
-        $transaction_id = $request->get('transaction_id');
-        $transaction = $this->transaction_manager->rollback($transaction_id);
+        $rollback = $this->transactionManager->rollback($transaction->id);
 
-        return response()->json([
-                                    'transaction' => TransactionResource::make($transaction),
-                                ]);
+        return new TransactionResource($rollback);
     }
 }

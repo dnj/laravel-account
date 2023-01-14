@@ -4,7 +4,7 @@ namespace dnj\Account\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class TransactionRequest extends FormRequest
+class TransactionUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -17,8 +17,7 @@ class TransactionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'transaction_id' => ['required'],
-            'meta' => ['nullable', 'array'],
+            'meta' => ['nullable'],
         ];
     }
 }

@@ -1,12 +1,7 @@
 <?php
 
 use dnj\Account\Http\Controllers\AccountController;
+use dnj\Account\Http\Controllers\TransactionController;
 
 Route::resource('accounts', AccountController::class);
-Route::controller(\dnj\Account\Http\Controllers\TransactionController::class)
-     ->prefix('transaction')
-     ->group(function () {
-         Route::post('transfer', 'transfer');
-         Route::post('update', 'update');
-         Route::post('rollback', 'transactionRollBack');
-     });
+Route::resource('transactions', TransactionController::class);

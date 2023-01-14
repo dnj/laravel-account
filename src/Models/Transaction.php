@@ -3,17 +3,20 @@
 namespace dnj\Account\Models;
 
 use dnj\Account\Contracts\ITransaction;
+use dnj\Account\Database\Factories\TransactionFactory;
 use dnj\Number\Contracts\INumber;
 use dnj\Number\Laravel\Casts\Number;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model implements ITransaction
 {
+    use HasFactory;
+
     protected $casts = [
         'amount' => Number::class,
         'meta' => 'array',
     ];
-
     protected $table = 'accounts_transactions';
 
     public function getID(): int
@@ -49,5 +52,10 @@ class Transaction extends Model implements ITransaction
     public function getMeta(): ?array
     {
         return $this->meta;
+    }
+
+    protected static function newFactory()
+    {
+        return TransactionFactory::new();
     }
 }
