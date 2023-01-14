@@ -7,7 +7,6 @@ use dnj\Account\Exceptions\MultipleAccountOperationException;
 use dnj\Account\Models\Holding;
 use dnj\Number\Number;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use InvalidArgumentException;
 
 class HoldingManagerTest extends TestCase
 {
@@ -175,7 +174,7 @@ class HoldingManagerTest extends TestCase
         ]);
         $this->assertSame(1, $holding->getAmount()->getValue());
 
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(\InvalidArgumentException::class);
         $this->getHoldingManager()->update($holding->getID(), [
             'amount' => Number::fromInt(-1),
         ]);
