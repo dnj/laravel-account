@@ -4,26 +4,21 @@ namespace dnj\Account\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class AccountResource extends JsonResource {
-	public static $wrap = 'account';
-	
-	/**
-	 * Transform the resource into an array.
-	 *
-	 * @param \Illuminate\Http\Request $request
-	 * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
-	 */
-	public function toArray ( $request ) {
-		return [
-			'id' => $this->id,
-			'title' => $this->title ,
-			'user_id' => $this->user_id ,
-			'currency_id' => $this->currency_id ,
-			'balance' => $this->balance ,
-			'can_send' => $this->can_send ,
-			'can_receive' => $this->can_receive ,
-			'status' => $this->status ,
-			'meta' => $this->meta
-		];
-	}
+class AccountResource extends JsonResource
+{
+    /**
+     * Transform the resource into an array.
+     *
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
+     */
+    public function toArray($request)
+    {
+        $this->resource->load(['user', 'currency']);
+        $data = parent::toArray($request);
+        $data['balance'] = isset($data['balance']) ?? $data['balance']->__toString();
+
+        return $data;
+    }
 }

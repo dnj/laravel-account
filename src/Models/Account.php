@@ -4,17 +4,19 @@ namespace dnj\Account\Models;
 
 use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\Contracts\IAccount;
+use dnj\Account\Database\Factories\AccountFactory;
 use dnj\Account\ModelHelpers;
 use dnj\Currency\Models\Currency;
 use dnj\Number\Contracts\INumber;
 use dnj\Number\Laravel\Casts\Number;
-use Exception;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Account extends Model implements IAccount
 {
     use ModelHelpers;
+    use HasFactory;
 
     protected $casts = [
         'balance' => Number::class,
@@ -27,7 +29,7 @@ class Account extends Model implements IAccount
     {
         $model = $this->getUserModel();
         if (null === $model) {
-            throw new Exception('No user model is configured under account.user_model config');
+            throw new \Exception('No user model is configured under account.user_model config');
         }
 
         return $this->belongsTo($model);
@@ -116,5 +118,10 @@ class Account extends Model implements IAccount
     public function getStatus(): AccountStatus
     {
         return $this->status;
+    }
+
+    protected static function newFactory()
+    {
+        return AccountFactory::new();
     }
 }
