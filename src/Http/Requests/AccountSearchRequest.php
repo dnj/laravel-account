@@ -2,6 +2,7 @@
 
 namespace dnj\Account\Http\Requests;
 
+use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\ModelHelpers;
 use dnj\Currency\Models\Currency;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,10 +22,12 @@ class AccountSearchRequest extends FormRequest
      */
     public function rules(): array
     {
+        $userExistRule = $this->getUserModel() ? Rule::exists($this->getUserModel(), 'id') : null;
+
         return [
             'title' => ['sometimes', 'required', 'string'],
             'currency_id' => ['sometimes', 'required', Rule::exists(Currency::class, 'id')],
-            'user_id' => ['sometimes', 'required', Rule::exists($this->getUserModel(), 'id')],
+            'user_id' => ['sometimes', 'required', $userExistRule],
             'can_send' => ['sometimes', 'required', 'boolean'],
             'can_receive' => ['sometimes', 'required', 'boolean'],
             'status' => ['sometimes', 'required', Rule::enum(AccountStatus::class)],

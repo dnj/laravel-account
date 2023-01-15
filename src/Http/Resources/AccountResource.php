@@ -9,7 +9,7 @@ class AccountResource extends JsonResource
     public function toArray($request)
     {
         $data = parent::toArray($request);
-        $data['balance'] = $data['balance']->__toString();
+        $data['balance'] = isset($data['balance']) ?? $data['balance']->__toString();
 
         return $data;
     }
