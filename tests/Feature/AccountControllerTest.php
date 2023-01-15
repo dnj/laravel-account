@@ -2,6 +2,7 @@
 
 namespace dnj\Account\Tests\Feature;
 
+use Carbon\Carbon;
 use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\Models\Account;
 use dnj\Account\Tests\Models\User;
@@ -72,7 +73,7 @@ class AccountControllerTest extends TestCase
              ->assertStatus(204);
     }
 
-    public function testIndexFilterUser(): void
+    public function testFilterByUser(): void
     {
         $user = User::factory()
                     ->create();
@@ -95,7 +96,7 @@ class AccountControllerTest extends TestCase
              });
     }
 
-    public function testIndexFilterStatus(): void
+    public function testFilterByStatus(): void
     {
         $user = User::factory()
                     ->create();
@@ -116,7 +117,7 @@ class AccountControllerTest extends TestCase
              });
     }
 
-    public function testIndexFliterByTitle(): void
+    public function testFliterByTitle(): void
     {
         $user = User::factory()
                     ->create();
@@ -137,7 +138,7 @@ class AccountControllerTest extends TestCase
              });
     }
 
-    public function testIndexFliterByCurrency(): void
+    public function testFliterByCurrency(): void
     {
         $user = User::factory()
                     ->create();
@@ -161,7 +162,7 @@ class AccountControllerTest extends TestCase
              });
     }
 
-    public function testIndexFliterByCanReceive(): void
+    public function testFliterByCanReceive(): void
     {
         $user = User::factory()
                     ->create();
@@ -182,7 +183,7 @@ class AccountControllerTest extends TestCase
              });
     }
 
-    public function testIndexFliterByCantSend(): void
+    public function testFliterByCantSend(): void
     {
         $user = User::factory()
                     ->create();
@@ -197,6 +198,95 @@ class AccountControllerTest extends TestCase
              ->assertJson(function (AssertableJson $json) {
                  $json->has('data', 1);
                  $json->whereContains('data.0.can_send', 0);
+                 $json->etc();
+             });
+    }
+
+    public function testFliterByBalance(): void
+    {
+        $user = User::factory()
+                    ->create();
+        $this->actingAs($user);
+        $account1 = Account::factory()
+                           ->withBalance(100)
+                           ->create();
+        $account2 = Account::factory()
+                           ->withBalance(80)
+                           ->create();
+        $account3 = Account::factory()
+                           ->withBalance(60)
+                           ->create();
+        $account4 = Account::factory()
+                           ->withBalance(50)
+                           ->create();
+        $account5 = Account::factory()
+                           ->withBalance(79)
+                           ->create();
+
+        $accountIds = [
+            $account1->getID(),
+            $account2->getID(),
+            $account3->getID(),
+            $account4->getID(),
+            $account5->getID(),
+        ];
+
+        $this->getJson(route('accounts.index', [
+            'balance_from' => 50,
+            'balance_to' => 70,
+        ]))->assertStatus(200)
+             ->assertJson(function (AssertableJson $json) use ($accountIds) {
+                 $json->has('data', 2);
+                 $json->whereContains('data.0.id', $accountIds[2]);
+                 $json->whereContains('data.1.id', $accountIds[3]);
+                 $json->etc();
+             });
+    }
+
+    public function testFliterByCreate(): void
+    {
+        $user = User::factory()
+                    ->create();
+        $this->actingAs($user);
+        $account1 = Account::factory()
+                           ->create([
+                                        'created_at' => Carbon::yesterday(),
+                                    ]);
+        $account2 = Account::factory()
+                           ->create([
+                                        'created_at' => Carbon::now()->subDays(6),
+                                    ]);
+        $account3 = Account::factory()
+                           ->create([
+                                        'created_at' => Carbon::now()->subDays(5),
+                                    ]);
+        $account4 = Account::factory()
+                           ->create([
+                                        'created_at' => Carbon::now()->subDays(4),
+                                    ]);
+        $account5 = Account::factory()
+                           ->create([
+                                        'created_at' => Carbon::now()->subDays(3),
+                                    ]);
+
+        $accountIds = [
+            $account1->getID(),
+            $account2->getID(),
+            $account3->getID(),
+            $account4->getID(),
+            $account5->getID(),
+        ];
+
+        $this->getJson(route('accounts.index', [
+            'created_from' => Carbon::now()->subDays(5)->toDateString(),
+            'created_to' => Carbon::now()->toDateString(),
+        ]))->assertStatus(200)
+             ->assertJson(function (AssertableJson $json) use ($accountIds) {
+                 $json->has('data', 4);
+                 $json->whereContains('data.0.id', $accountIds[0]);
+                 $json->whereContains('data.1.id', $accountIds[2]);
+                 $json->whereContains('data.2.id', $accountIds[3]);
+                 $json->whereContains('data.3.id', $accountIds[4]);
                  $json->etc();
              });
     }

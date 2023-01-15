@@ -20,7 +20,6 @@ class TransactionController extends Controller
     public function index(Account $account, TransactionSearchRequest $request)
     {
         $data = $request->validated();
-
         $q = Transaction::query()
             ->where('from_id', $account->id)
             ->orWhere('to_id', $account->id)
@@ -37,8 +36,9 @@ class TransactionController extends Controller
         if (isset($data['amount_to'])) {
             $q->where('amount', '<', $data['amount_to']);
         }
+        $q = $q->cursorPaginate();
 
-        return new TransactionResource($q->cursorPaginate());
+        return TransactionResource::collection($q);
     }
 
     public function store(TransactionStoreRequest $request)

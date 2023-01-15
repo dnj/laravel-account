@@ -52,8 +52,9 @@ class AccountController extends Controller
         if (isset($data['balance_to'])) {
             $q->where('balance', '<', $data['balance_to']);
         }
+        $q = $q->cursorPaginate();
 
-        return new AccountResource($q->cursorPaginate());
+        return AccountResource::collection($q);
     }
 
     public function store(AccountStoreRequest $request)
