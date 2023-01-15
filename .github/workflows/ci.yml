@@ -1,0 +1,26 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: php-actions/composer@v6
+      with:
+        php_version: "8.1"
+    - uses: php-actions/phpunit@v3
+      with:
+        php_extensions: xdebug
+        php_version: "8.1"
+        args: --coverage-clover=coverage/clover-coverage.xml
+      env:
+          XDEBUG_MODE: coverage
+
+    - name: Code Coverage Check
+      uses: themichaelhall/check-code-coverage@v2
+      with:
+          report: coverage/clover-coverage.xml
+          required-percentage: 80

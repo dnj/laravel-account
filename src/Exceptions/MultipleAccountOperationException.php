@@ -2,8 +2,6 @@
 
 namespace dnj\Account\Exceptions;
 
-use Exception;
-
-class MultipleAccountOperationException extends Exception
+class MultipleAccountOperationException extends \Exception
 {
 }

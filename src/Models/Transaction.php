@@ -3,12 +3,21 @@
 namespace dnj\Account\Models;
 
 use dnj\Account\Contracts\ITransaction;
+use dnj\Account\Database\Factories\TransactionFactory;
 use dnj\Number\Contracts\INumber;
 use dnj\Number\Laravel\Casts\Number;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model implements ITransaction
 {
+    use HasFactory;
+
+    protected static function newFactory()
+    {
+        return TransactionFactory::new();
+    }
+
     protected $casts = [
         'amount' => Number::class,
         'meta' => 'array',

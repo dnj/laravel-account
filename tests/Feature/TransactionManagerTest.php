@@ -6,15 +6,17 @@ use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\Exceptions\CurrencyMismatchException;
 use dnj\Account\Exceptions\DisabledAccountException;
 use dnj\Account\Exceptions\InvalidAccountOperationException;
+use dnj\Account\Models\Account;
+use dnj\Currency\Models\Currency;
 use dnj\Number\Number;
 
 class TransactionManagerTest extends TestCase
 {
     public function testTransfer()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->create();
+        $account2 = Account::factory()->withCurrency($USD)->create();
 
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
@@ -28,12 +30,9 @@ class TransactionManagerTest extends TestCase
 
     public function testTransferFromAccountDeactived()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account1->status = AccountStatus::DEACTIVE;
-        $account1->save();
-
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->deactived()->create();
+        $account2 = Account::factory()->withCurrency($USD)->create();
 
         $this->expectException(DisabledAccountException::class);
         $this->getTransactionManager()->transfer(
@@ -47,11 +46,9 @@ class TransactionManagerTest extends TestCase
 
     public function testTransferToAccountDeactived()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
-        $account2->status = AccountStatus::DEACTIVE;
-        $account2->save();
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->create();
+        $account2 = Account::factory()->withCurrency($USD)->deactived()->create();
 
         $this->expectException(DisabledAccountException::class);
         $this->getTransactionManager()->transfer(
@@ -65,11 +62,9 @@ class TransactionManagerTest extends TestCase
 
     public function testTransferFromAccountCantSend()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account1->can_send = false;
-        $account1->save();
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->cantSend()->create();
+        $account2 = Account::factory()->withCurrency($USD)->create();
 
         $this->expectException(InvalidAccountOperationException::class);
         $this->getTransactionManager()->transfer(
@@ -83,11 +78,9 @@ class TransactionManagerTest extends TestCase
 
     public function testTransferToAccountCantReceive()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
-        $account2->can_receive = false;
-        $account2->save();
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->create();
+        $account2 = Account::factory()->withCurrency($USD)->cantReceive()->create();
 
         $this->expectException(InvalidAccountOperationException::class);
         $this->getTransactionManager()->transfer(
@@ -101,10 +94,8 @@ class TransactionManagerTest extends TestCase
 
     public function testTransferDiffrentCurrencies()
     {
-        $USD = $this->createUSD();
-        $EUR = $this->createEUR();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($EUR);
+        $account1 = Account::factory()->withUSD()->create();
+        $account2 = Account::factory()->withEUR()->create();
 
         $this->expectException(CurrencyMismatchException::class);
         $this->getTransactionManager()->transfer(
@@ -118,9 +109,9 @@ class TransactionManagerTest extends TestCase
 
     public function testRollback()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->create();
+        $account2 = Account::factory()->withCurrency($USD)->create();
 
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
@@ -139,9 +130,9 @@ class TransactionManagerTest extends TestCase
 
     public function testRollbackFromAccountDeactived()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->create();
+        $account2 = Account::factory()->withCurrency($USD)->create();
 
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
@@ -161,9 +152,9 @@ class TransactionManagerTest extends TestCase
 
     public function testRollbackToAccountDeactived()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->create();
+        $account2 = Account::factory()->withCurrency($USD)->create();
 
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
@@ -183,9 +174,9 @@ class TransactionManagerTest extends TestCase
 
     public function testUpdate()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        $account1 = Account::factory()->withCurrency($USD)->create();
+        $account2 = Account::factory()->withCurrency($USD)->create();
 
         $transaction = $this->getTransactionManager()->transfer(
             $account1->getID(),
@@ -202,10 +193,8 @@ class TransactionManagerTest extends TestCase
 
     public function testFindByAccount()
     {
-        $USD = $this->createUSD();
-        $account1 = $this->createUSDAccount($USD);
-        $account2 = $this->createUSDAccount($USD);
-        $account3 = $this->createUSDAccount($USD);
+        $USD = Currency::factory()->asUSD()->create();
+        [$account1, $account2, $account3] = Account::factory(3)->withCurrency($USD)->create();
 
         $this->getTransactionManager()->transfer(
             $account1->getID(),

@@ -1,0 +1,630 @@
+{
+  "openapi": "3.1.0",
+  "x-stoplight": {
+    "id": "n1fdjrmelkqfx"
+  },
+  "info": {
+    "title": "account",
+    "version": "1.0"
+  },
+  "servers": [],
+  "paths": {
+    "/accounts/{accountId}": {
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "accountId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Filter account",
+        "tags": [
+          "accounts"
+        ],
+        "operationId": "filter account",
+        "description": "Retrieve the information of the account ",
+        "deprecated": true,
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "title",
+            "description": "account title"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "currency_id",
+            "description": "currency id"
+          },
+          {
+            "schema": {
+              "type": "integer"
+            },
+            "in": "query",
+            "name": "user_id",
+            "description": "user id"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "can_send"
+          },
+          {
+            "schema": {
+              "type": "boolean"
+            },
+            "in": "query",
+            "name": "can_receive"
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "status"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "created_from"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "created_to"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "balance_from"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "balance_to"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/account"
+                },
+                "examples": {
+                  "data": {
+                    "value": {
+                      "id": "string",
+                      "title": "string",
+                      "user_id": 0,
+                      "currency_id": 0,
+                      "balance": 0,
+                      "holding": 0,
+                      "meta": [
+                        null
+                      ],
+                      "status": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/account"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "id": "string",
+                    "title": "string",
+                    "user_id": 0,
+                    "currency_id": 0,
+                    "balance": 0,
+                    "holding": 0,
+                    "meta": [
+                      null
+                    ],
+                    "status": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "create new account",
+        "operationId": "post-account",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/account"
+                },
+                "examples": {
+                  "data": {
+                    "value": {
+                      "id": "string",
+                      "title": "string",
+                      "user_id": 0,
+                      "currency_id": 0,
+                      "balance": 0,
+                      "holding": 0,
+                      "meta": [
+                        null
+                      ],
+                      "status": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "tags": [
+          "accounts"
+        ],
+        "description": "Create new account",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/account"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "id": "string",
+                    "title": "string",
+                    "user_id": 0,
+                    "currency_id": 0,
+                    "balance": 0,
+                    "holding": 0,
+                    "meta": [
+                      null
+                    ],
+                    "status": 0
+                  }
+                }
+              }
+            }
+          },
+          "description": ""
+        }
+      },
+      "put": {
+        "summary": "Update Account by Id",
+        "operationId": "accountId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/account"
+                },
+                "examples": {
+                  "data": {
+                    "value": {
+                      "id": "string",
+                      "title": "string",
+                      "user_id": 0,
+                      "currency_id": 0,
+                      "balance": 0,
+                      "holding": 0,
+                      "meta": [
+                        null
+                      ],
+                      "status": 0
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "deprecated": true,
+        "description": "Update Account by Id",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/account"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "id": "string",
+                    "title": "string",
+                    "user_id": 0,
+                    "currency_id": 0,
+                    "balance": 0,
+                    "holding": 0,
+                    "meta": [
+                      null
+                    ],
+                    "status": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "accounts"
+        ],
+        "x-internal": true
+      },
+      "delete": {
+        "summary": "Destroy account by Id",
+        "operationId": "accountId",
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "tags": [
+          "accounts"
+        ],
+        "description": "Destroy account by Id",
+        "deprecated": true
+      }
+    },
+    "/transactions/{transactionId}": {
+      "post": {
+        "summary": "Create new transaction",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/transaction"
+                },
+                "examples": {
+                  "data": {
+                    "value": {
+                      "id": "integer",
+                      "form_id": 0,
+                      "to_id": 0,
+                      "amount": 0,
+                      "meta": [
+                        null
+                      ],
+                      "force": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "operationId": "post-accounts",
+        "description": "Create new transaction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/transaction"
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "form_id": 0,
+                    "to_id": 0,
+                    "amount": 0,
+                    "meta": [
+                      null
+                    ],
+                    "force": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "transactions"
+        ]
+      },
+      "put": {
+        "summary": "Update Transaction by Id",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/transaction"
+                },
+                "examples": {
+                  "data": {
+                    "value": {
+                      "form_id": 0,
+                      "to_id": 0,
+                      "amount": 0,
+                      "meta": [
+                        null
+                      ],
+                      "force": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "operationId": "transactionId",
+        "deprecated": true,
+        "x-internal": true,
+        "description": "Update Transaction by Id",
+        "tags": [
+          "transactions"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "meta": {
+                    "type": "array",
+                    "items": {}
+                  }
+                }
+              },
+              "examples": {
+                "Example 1": {
+                  "value": {
+                    "meta": [
+                      null
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "rollback transaction",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/transaction"
+                },
+                "examples": {
+                  "data": {
+                    "value": {
+                      "form_id": 0,
+                      "to_id": 0,
+                      "amount": 0,
+                      "meta": [
+                        null
+                      ],
+                      "force": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "operationId": "transactionId",
+        "tags": [
+          "transactions"
+        ],
+        "description": "rollback transaction"
+      },
+      "parameters": [
+        {
+          "schema": {
+            "type": "string"
+          },
+          "name": "transactionId",
+          "in": "path",
+          "required": true
+        }
+      ],
+      "get": {
+        "summary": "Filter transaction",
+        "operationId": "",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/transaction"
+                },
+                "examples": {
+                  "data": {
+                    "value": {
+                      "id": "string",
+                      "form_id": 0,
+                      "to_id": 0,
+                      "amount": 0,
+                      "meta": [
+                        null
+                      ],
+                      "force": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        },
+        "tags": [
+          "transactions"
+        ],
+        "description": "Retrieve the information of the transaction ",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "created_from"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "created_to"
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "amount_from"
+          },
+          {
+            "schema": {
+              "type": "number"
+            },
+            "in": "query",
+            "name": "amount_to"
+          }
+        ],
+        "deprecated": true,
+        "x-internal": true
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "account": {
+        "title": "account",
+        "x-stoplight": {
+          "id": "k5d2iv2ipkoj8"
+        },
+        "type": "object",
+        "examples": [
+          {
+            "id": "string",
+            "title": "string",
+            "user_id": 0,
+            "currency_id": 0,
+            "balance": 0,
+            "holding": 0,
+            "meta": [
+              null
+            ],
+            "status": 0
+          }
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "currency_id": {
+            "type": "integer"
+          },
+          "balance": {
+            "type": "number"
+          },
+          "holding": {
+            "type": "number"
+          },
+          "meta": {
+            "type": "array",
+            "items": {}
+          },
+          "status": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "user_id",
+          "currency_id"
+        ]
+      },
+      "transaction": {
+        "title": "transaction",
+        "x-stoplight": {
+          "id": "hrb3vufy16kyk"
+        },
+        "type": "object",
+        "properties": {
+          "form_id": {
+            "type": "integer"
+          },
+          "to_id": {
+            "type": "integer"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "meta": {
+            "type": "array",
+            "items": {}
+          },
+          "force": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
