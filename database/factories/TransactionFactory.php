@@ -25,14 +25,14 @@ class TransactionFactory extends Factory
         ];
     }
 
-    public function withFromAccount(Account $from)
+    public function withFromAccount(Account|AccountFactory $from)
     {
         return $this->state(fn () => [
             'from_id' => $from->getID(),
         ]);
     }
 
-    public function withToAccount(Account $to)
+    public function withToAccount(Account|AccountFactory $to)
     {
         return $this->state(fn () => [
             'to_id' => $to->getID(),
