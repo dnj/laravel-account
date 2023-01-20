@@ -9,6 +9,7 @@ use dnj\Account\ModelHelpers;
 use dnj\Currency\Models\Currency;
 use dnj\Number\Contracts\INumber;
 use dnj\Number\Laravel\Casts\Number;
+use dnj\UserLogger\Concerns\Loggable;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +18,7 @@ class Account extends Model implements IAccount
 {
     use ModelHelpers;
     use HasFactory;
+    use Loggable;
 
     protected static function newFactory()
     {

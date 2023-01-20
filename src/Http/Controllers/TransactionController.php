@@ -10,10 +10,12 @@ use dnj\Account\Models\Account;
 use dnj\Account\Models\Transaction;
 use dnj\Account\TransactionManager;
 use dnj\Number\Number;
+use dnj\UserLogger\Contracts\ILogger;
+use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-    public function __construct(protected TransactionManager $transactionManager)
+    public function __construct(protected TransactionManager $transactionManager, protected ILogger $userLogger)
     {
     }
 
@@ -52,6 +54,12 @@ class TransactionController extends Controller
             $data['meta'] ?? null,
             $data['force'] ?? false,
         );
+        $changes = $transaction->changesForLog();
+        $this->userLogger
+            ->withRequest($request)
+            ->performedOn($transaction)
+            ->withProperties($changes)
+            ->log('create-transaction');
 
         return new TransactionResource($transaction);
     }
@@ -60,13 +68,25 @@ class TransactionController extends Controller
     {
         $data = $request->validated();
         $transaction = $this->transactionManager->update($transaction->id, $data['meta']);
+        $changes = $transaction->changesForLog();
+        $this->userLogger
+            ->withRequest($request)
+            ->performedOn($transaction)
+            ->withProperties($changes)
+            ->log('update-transaction');
 
         return new TransactionResource($transaction);
     }
 
-    public function destroy(Transaction $transaction)
+    public function destroy(Transaction $transaction, Request $request)
     {
         $rollback = $this->transactionManager->rollback($transaction->id);
+        $changes = $rollback->changesForLog();
+        $this->userLogger
+            ->withRequest($request)
+            ->performedOn($transaction)
+            ->withProperties($changes)
+            ->log('rollback-transaction');
 
         return new TransactionResource($rollback);
     }

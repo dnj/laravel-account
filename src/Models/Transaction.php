@@ -6,12 +6,14 @@ use dnj\Account\Contracts\ITransaction;
 use dnj\Account\Database\Factories\TransactionFactory;
 use dnj\Number\Contracts\INumber;
 use dnj\Number\Laravel\Casts\Number;
+use dnj\UserLogger\Concerns\Loggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model implements ITransaction
 {
     use HasFactory;
+    use Loggable;
 
     protected static function newFactory()
     {

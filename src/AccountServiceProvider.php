@@ -13,6 +13,7 @@ class AccountServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(__DIR__.'/../config/account.php', 'account');
+        $this->app->register(\dnj\UserLogger\ServiceProvider::class);
         $this->app->singleton(IAccountManager::class, AccountManager::class);
         $this->app->singleton(ITransactionManager::class, TransactionManager::class);
         $this->app->singleton(IHoldingManager::class, HoldingManager::class);

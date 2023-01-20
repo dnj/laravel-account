@@ -9,11 +9,13 @@ use dnj\Account\Http\Requests\AccountStoreRequest;
 use dnj\Account\Http\Requests\AccountUpdateRequest;
 use dnj\Account\Http\Resources\AccountResource;
 use dnj\Account\Models\Account;
+use dnj\UserLogger\Contracts\ILogger;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class AccountController extends Controller
 {
-    public function __construct(protected AccountManager $accountManager)
+    public function __construct(protected AccountManager $accountManager, protected ILogger $userLogger)
     {
     }
 
@@ -69,6 +71,12 @@ class AccountController extends Controller
             $data['can_receive'],
             $data['meta']
         );
+        $changes = $account->changesForLog();
+        $this->userLogger
+            ->withRequest($request)
+            ->performedOn($account)
+            ->withProperties($changes)
+            ->log('create-account');
 
         return AccountResource::make($account);
     }
@@ -80,14 +88,27 @@ class AccountController extends Controller
         foreach ($data as $key => $value) {
             $changes[Str::camel($key)] = $value;
         }
-        $this->accountManager->update($account->id, $changes);
+
+        $account = $this->accountManager->update($account->id, $changes);
+        $changes = $account->changesForLog();
+        $this->userLogger
+            ->withRequest($request)
+            ->performedOn($account)
+            ->withProperties($changes)
+            ->log('update-account');
 
         return AccountResource::make($account);
     }
 
-    public function destroy(Account $account)
+    public function destroy(Account $account, Request $request)
     {
+        $changes = $account->toArray();
         $this->accountManager->delete($account->id);
+        $this->userLogger
+            ->withRequest($request)
+            ->performedOn($account)
+            ->withProperties($changes)
+            ->log('delete-account');
 
         return response()->noContent();
     }
