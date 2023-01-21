@@ -76,7 +76,7 @@ class AccountController extends Controller
             ->withRequest($request)
             ->performedOn($account)
             ->withProperties($changes)
-            ->log('create-account');
+            ->log('create');
 
         return AccountResource::make($account);
     }
@@ -95,7 +95,7 @@ class AccountController extends Controller
             ->withRequest($request)
             ->performedOn($account)
             ->withProperties($changes)
-            ->log('update-account');
+            ->log('update');
 
         return AccountResource::make($account);
     }
@@ -108,7 +108,7 @@ class AccountController extends Controller
             ->withRequest($request)
             ->performedOn($account)
             ->withProperties($changes)
-            ->log('delete-account');
+            ->log('delete');
 
         return response()->noContent();
     }

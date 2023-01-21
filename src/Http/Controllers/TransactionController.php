@@ -59,7 +59,7 @@ class TransactionController extends Controller
             ->withRequest($request)
             ->performedOn($transaction)
             ->withProperties($changes)
-            ->log('create-transaction');
+            ->log('create');
 
         return new TransactionResource($transaction);
     }
@@ -73,7 +73,7 @@ class TransactionController extends Controller
             ->withRequest($request)
             ->performedOn($transaction)
             ->withProperties($changes)
-            ->log('update-transaction');
+            ->log('update');
 
         return new TransactionResource($transaction);
     }
@@ -86,7 +86,7 @@ class TransactionController extends Controller
             ->withRequest($request)
             ->performedOn($transaction)
             ->withProperties($changes)
-            ->log('rollback-transaction');
+            ->log('rollback');
 
         return new TransactionResource($rollback);
     }
