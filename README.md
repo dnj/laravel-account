@@ -59,7 +59,6 @@ php artisan vendor:publish --provider="dnj\laravel-account\AccountServiceProvide
 
 Create new account:
 ```php
-<?php
 use dnj\Account\AccountManager;
 $account = new AccountManager();
 $account->create(
@@ -75,7 +74,6 @@ $account->create(
 
 Update account:
 ```php
-<?php
 use dnj\Account\AccountManager;
 $account = new AccountManager();
 $data = $request->validated();
@@ -96,7 +94,6 @@ accountManager->delete($account->id);
 ### Transaction usage:
 Create transaction:
 ```php
-<?php
 use dnj\Account\TransactionManager;
 $transactionManager = new TransactionManager();
 $data['amount'] = Number::formString($data['amount']);
@@ -110,7 +107,6 @@ $transaction = $transactionManager->transfer(
 ```
 Update transaction:
 ```php
-<?php
 use dnj\Account\TransactionManager;
 $transactionManager = new TransactionManager();
 $meta = [
@@ -125,12 +121,14 @@ $meta);
 
 Rollback transaction:
 ```php
-<?php
 use dnj\Account\TransactionManager;
 $transactionManager = new TransactionManager();
 transactionManager->rollback($transaction->id);
 ```
-
+## Testing
+```bash
+./vendor/bin/phpunit 
+```
 ## About
 We'll try to maintain this project as simple as possible, but Pull Requests are welcomed!
 
