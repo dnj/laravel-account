@@ -21,7 +21,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
     public function setUp(): void
     {
         parent::setUp();
-        config()->set('ticket.user_model', User::class);
+        config()->set('account.user_model', User::class);
     }
 
     protected function defineDatabaseMigrations(): void
