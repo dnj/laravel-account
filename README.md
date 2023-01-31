@@ -4,11 +4,11 @@
 [![Total Downloads][ico-downloads]][link-downloads]
 [![Software License][ico-license]][link-license]
 [![Testing status][ico-workflow-test]][link-workflow-test]
-[![Open API][ico-open-api]][link-open-api]
+[![Open API][ico-openapi]][link-openapi]
 
 ## Introduction
 
-The  dnj/laravel-account Public package provides easy way to manage  account and transaction of the users of your app. The Package stores all data in the accounts and transactions table.
+The dnj/laravel-account package provides easy way to manage accounts and transactions of the users in your app. The Package stores all data in the accounts and transactions table.
 * Latest versions of PHP and PHPUnit and PHPCsFixer
 * Best practices applied:
     * [`README.md`][link-readme] (badges included)
@@ -17,21 +17,34 @@ The  dnj/laravel-account Public package provides easy way to manage  account and
     * [`phpunit.xml`][link-phpunit]
     * [`.gitignore`][link-gitignore]
     * [`.php-cs-fixer.php`][link-phpcsfixer]
-    * [`openAPI`][link-phpcsfixer]
+    * [`Open Api 3`][link-openapi]
 * Some useful resources to start coding
 
 
 ## Here's a demo of how you can use it:
 ```php
-$account = new AccountManager();
-$account->create(
-    'this is a firest account',
-    $currency_id,
-    Auth::user()->id,
-    AccountStatus::ACTIVE,
-    false,
-    true,
-    ["key" => "value"]
+use dnj\Account\Contracts\IAccount;
+use dnj\Account\Contracts\IAccountManager;
+use dnj\Account\Contracts\AccountStatus;
+use dnj\Currency\Contracts\ICurrencyManager;
+
+$currencyManager = app(ICurrencyManager::class);
+$currency = $currencyManager->firstByCode("USD");
+
+$accountManager = app(IAccountManager::class);
+
+/**
+ * @var IAccount $account
+ */
+$account = $accountManager->create(
+    title: 'Profits',
+    userId: Auth::user()->id,
+    currencyId: $currency->getId(),
+    status: AccountStatus::ACTIVE,
+    canSend: true,
+    canReceive: true,
+    meta: ["key" => "value"],
+    userActivityLog: true
 );
 ```
 ## Installation
@@ -43,7 +56,7 @@ composer require dnj/laravel-account
 The package will automatically register itself.
 
 
-After this you can create the `accounts and transactions` table by running the migrations:
+After this you can create required tables by running the migrations:
 
 ```bash
 php artisan migrate
@@ -52,84 +65,151 @@ php artisan migrate
 You can optionally publish the config file with:
 
 ```bash
-php artisan vendor:publish --provider="dnj\laravel-account\AccountServiceProvider" --tag="config"
+php artisan vendor:publish --provider="dnj\Account\AccountServiceProvider" --tag="config"
 ```
 
-### Account usage:
+Config file:
+```php
+return [
+    // Define your user model class for connect accounts to users. Example: App\User:class
+    'user_model' => null,
+    
+    // Enable http restful routes.
+    'route_enable' => true,
+    
+    // Prefix of routes. By default routes register with /api/{prefix}/{accounts|transactions} pattern.
+    'route_prefix' => null,
+];
+```
+
+## Working With Accounts
 
 Create new account:
 ```php
-use dnj\Account\AccountManager;
-$account = new AccountManager();
-$account->create(
-    'this is a firest account',
-    $currency_id,
-    Auth::user()->id,
-    AccountStatus::ACTIVE,
-    false,
-    true,
-    ["key" => "value"]
+use dnj\Account\Contracts\IAccount;
+use dnj\Account\Contracts\IAccountManager;
+use dnj\Account\Contracts\AccountStatus;
+use dnj\Currency\Contracts\ICurrencyManager;
+
+$currencyManager = app(ICurrencyManager::class);
+$currency = $currencyManager->firstByCode("USD");
+
+$accountManager = app(IAccountManager::class);
+
+/**
+ * @var IAccount $account
+ */
+$account = $accountManager->create(
+    title: 'Profits',
+    userId: Auth::user()->id,
+    currencyId: $currency->getId(),
+    status: AccountStatus::ACTIVE,
+    canSend: true,
+    canReceive: true,
+    meta: ["key" => "value"],
+    userActivityLog: true
 );
+
 ```
 
 Update account:
 ```php
-use dnj\Account\AccountManager;
-$account = new AccountManager();
-$data = $request->validated();
-$changes = [];
-foreach ($data as $key => $value) {
-    $changes[Str::camel($key)] = $value;
-}
-accountManager->update($account->id, $changes);
+use dnj\Account\Contracts\IAccountManager;
+use dnj\Account\Contracts\AccountStatus;
+
+$accountManager = app(IAccountManager::class);
+$account = $accountManager->update(
+    accountId: 2,
+    changes: array(
+        'status' => AccountStatus::DEACTIVE,
+    ),
+    userActivityLog: true
+);
 ```
 
 Destroy account:
 ```php
-<?php
-use dnj\Account\AccountManager;
-$account = new AccountManager();
-accountManager->delete($account->id);
-```
-### Transaction usage:
-Create transaction:
-```php
-use dnj\Account\TransactionManager;
-$transactionManager = new TransactionManager();
-$data['amount'] = Number::formString($data['amount']);
-$transaction = $transactionManager->transfer(
-    $data['from_id'],
-    $data['to_id'],
-    $data['amount'],
-    $data['meta'] ?? null,
-    $data['force'] ?? false,
+use dnj\Account\Contracts\IAccountManager;
+
+$accountManager = app(IAccountManager::class);
+$accountManager->delete(
+    accountId: $account->getId(),
+    userActivityLog: true
 );
 ```
+
+***
+
+## Working With Transactions
+
+Create transaction:
+```php
+use dnj\Account\Contracts\IAccountManager;
+use dnj\Account\Contracts\ITransactionManager;
+use dnj\Account\Contracts\ITransaction;
+use dnj\Number\Number;
+
+$accountManager = app(IAccountManager::class);
+
+$profits = $accountManager->getByID(1);
+$salary = $accountManager->getByID(2);
+
+$transactionManager = app(ITransactionManager::class);
+
+/**
+ * @var ITransaction $transaction
+ */
+$transaction = $transactionManager->transfer(
+    fromAccountId: $profits->getId(),
+    toAccountId: $salary->getId(),
+    amount: Number::fromInput(2501.55),
+    meta: [
+        'month' => '2023-01'
+    ],
+    force: false,
+    userActivityLog: true
+);
+
+```
+
+
 Update transaction:
 ```php
-use dnj\Account\TransactionManager;
-$transactionManager = new TransactionManager();
-$meta = [
-    [
-        "key" => 'value'		
-    ]
-];
+use dnj\Account\Contracts\ITransactionManager;
+use dnj\Account\Contracts\ITransaction;
+
+$transactionManager = app(ITransactionManager::class);
+
+/**
+ * @var ITransaction $transaction
+ */
 $transaction = $transactionManager->update(
-$transaction->id,
-$meta);
+    transactionId: 55,
+    meta: [
+        'month' => '2023-01',
+        'over-time' => 21
+    ]
+);
 ```
 
 Rollback transaction:
 ```php
-use dnj\Account\TransactionManager;
-$transactionManager = new TransactionManager();
-transactionManager->rollback($transaction->id);
+use dnj\Account\Contracts\ITransactionManager;
+use dnj\Account\Contracts\ITransaction;
+
+$transactionManager = app(ITransactionManager::class);
+
+/**
+ * @var ITransaction $rollbackTransaction new transaction that just made for rollback
+ */
+$rollbackTransaction = $transactionManager->rollback(55);
 ```
+
 ## How to use package API
 
-A document in YAML format has been prepared for better familiarization and use of package web services. which is placed in the [`docs`][link-docs] folder.
+A document in YAML format has been prepared for better familiarization and use of package web services. which is placed in the [`openapi.json`][link-openapi] file.
 
-To use this file, you can import it on the [stoplight.io](https://stoplight.io) site and see all available web services.
+To use this file, you can import it on the [Swagger](link-swagger) site and see all available methods.
 
 
 ## Contribution
@@ -146,6 +226,8 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 
 ## Testing
+You can run unit tests with PHP Unit:
+
 ```bash
 ./vendor/bin/phpunit 
 ```
@@ -160,9 +242,10 @@ The MIT License (MIT). Please see [License File][link-license] for more informat
 [ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
 [ico-downloads]: https://img.shields.io/packagist/dt/dnj/laravel-account.svg?style=flat-square
 [ico-workflow-test]: https://github.com/dnj/local-filesystem/actions/workflows/test.yaml/badge.svg
-[ico-open-api]: https://img.shields.io/endpoint?color=blue&label=openAPI&logo=%22%236BA539%22&logoColor=blue&style=for-the-badge&url=https%3A%2F%2Fimg.shields.io%2Fendpoint%3Furl%3Dhttps%3A%2F%2Fgithub.com%2Fdnj%2Flaravel-account%2Fblob%2Fmaster%2FapiDocs%2Faccount.json
+[ico-openapi]: https://img.shields.io/endpoint?color=blue&label=openAPI&logo=%22%236BA539%22&logoColor=blue&style=for-the-badge&url=https%3A%2F%2Fimg.shields.io%2Fendpoint%3Furl%3Dhttps%3A%2F%2Fgithub.com%2Fdnj%2Flaravel-account%2Fblob%2Fmaster%2FapiDocs%2Faccount.json
 
-[link-open-api]: https://github.com/dnj/laravel-account/blob/master/apiDocs/account.json
+[link-openapi]: https://github.com/dnj/laravel-account/blob/master/openapi.json
+[link-swagger]: https://petstore.swagger.io/?url=https://raw.githubusercontent.com/dnj/laravel-account/master/openapi.json
 [link-workflow-test]: https://github.com/dnj/laravel-account/actions/workflows/test.yaml
 [link-packagist]: https://packagist.org/packages/dnj/laravel-account
 [link-license]: https://github.com/dnj/laravel-account/blob/master/LICENSE
