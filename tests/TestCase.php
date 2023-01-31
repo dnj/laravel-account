@@ -22,7 +22,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
     public function setUp(): void
     {
         parent::setUp();
-        config()->set('ticket.user_model', User::class);
+        config()->set('account.user_model', User::class);
     }
 
     public function getAccountManager(): AccountManager
