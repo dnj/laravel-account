@@ -2,19 +2,22 @@
 
 namespace dnj\Account\Http\Controllers;
 
-use dnj\Account\AccountManager;
 use dnj\Account\Contracts\AccountStatus;
+use dnj\Account\Contracts\IAccountManager;
 use dnj\Account\Http\Requests\AccountSearchRequest;
 use dnj\Account\Http\Requests\AccountStoreRequest;
 use dnj\Account\Http\Requests\AccountUpdateRequest;
 use dnj\Account\Http\Resources\AccountResource;
 use dnj\Account\Models\Account;
+use dnj\UserLogger\Contracts\ILogger;
 use Illuminate\Support\Str;
 
 class AccountController extends Controller
 {
-    public function __construct(protected AccountManager $accountManager)
-    {
+    public function __construct(
+        protected IAccountManager $accountManager,
+        protected ILogger $userLogger
+    ) {
     }
 
     public function index(AccountSearchRequest $request)
@@ -67,7 +70,8 @@ class AccountController extends Controller
             AccountStatus::ACTIVE,
             $data['can_send'],
             $data['can_receive'],
-            $data['meta']
+            $data['meta'],
+            true
         );
 
         return AccountResource::make($account);
@@ -80,14 +84,16 @@ class AccountController extends Controller
         foreach ($data as $key => $value) {
             $changes[Str::camel($key)] = $value;
         }
-        $this->accountManager->update($account->id, $changes);
+
+        $account = $this->accountManager->update($account->id, $changes, true);
 
         return AccountResource::make($account);
     }
 
     public function destroy(Account $account)
     {
-        $this->accountManager->delete($account->id);
+        $changes = $account->toArray();
+        $this->accountManager->delete($account->id, true);
 
         return response()->noContent();
     }

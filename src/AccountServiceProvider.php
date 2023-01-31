@@ -31,10 +31,11 @@ class AccountServiceProvider extends ServiceProvider
 
     private function loadRoutes()
     {
-        if (config('account.route_enable')) {
-            Route::prefix(config('account.route_prefix'))->group(function () {
-                $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
-            });
+        if (!config('account.route_enable')) {
+            return;
         }
+        Route::prefix(config('account.route_prefix'))->group(function () {
+            $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+        });
     }
 }

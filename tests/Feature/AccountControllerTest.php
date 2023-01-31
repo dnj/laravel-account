@@ -34,7 +34,7 @@ class AccountControllerTest extends TestCase
                 'cat' => null,
             ],
         ];
-        $this->postJson(route('accounts.store'), $data)
+        $response = $this->postJson(route('accounts.store'), $data)
              ->assertStatus(201)
              ->assertJson(fn (AssertableJson $json) => $json->has('data.id')
                                                              ->etc())

@@ -12,12 +12,17 @@ use dnj\Account\Exceptions\InvalidAccountOperationException;
 use dnj\Account\Models\Account;
 use dnj\Account\Models\Transaction;
 use dnj\Number\Contracts\INumber;
+use dnj\UserLogger\Contracts\ILogger;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class TransactionManager implements ITransactionManager
 {
     use UpdatingAccount;
+
+    public function __construct(protected ILogger $userLogger)
+    {
+    }
 
     public function getByID(int $id): Transaction
     {
@@ -41,8 +46,9 @@ class TransactionManager implements ITransactionManager
         INumber $amount,
         ?array $meta = null,
         bool $force = false,
+        bool $userActivityLog = false,
     ): Transaction {
-        return DB::transaction(function () use ($fromAccountId, $toAccountId, $amount, $meta, $force) {
+        return DB::transaction(function () use ($fromAccountId, $toAccountId, $amount, $meta, $force, $userActivityLog) {
             $fromAccount = $this->getAccountForUpdate($fromAccountId);
             $toAccount = $this->getAccountForUpdate($toAccountId);
 
@@ -67,16 +73,18 @@ class TransactionManager implements ITransactionManager
                 throw new BalanceInsufficientException($fromAccount, $available, $amount);
             }
 
-            $transaction = $this->createTransaction($fromAccount, $toAccount, $amount, $meta);
+            $transaction = $this->createTransaction($fromAccount, $toAccount, $amount, $meta, $userActivityLog);
 
             return $transaction;
         });
     }
 
-    public function rollback(int $transactionId, bool $force = false): Transaction
+    public function rollback(int $transactionId, bool $force = false, bool $userActivityLog = false): Transaction
     {
-        return DB::transaction(function () use ($transactionId, $force) {
-            $transaction = $this->getByID($transactionId);
+        return DB::transaction(function () use ($transactionId, $force, $userActivityLog) {
+            $transaction = Transaction::query()
+                ->lockForUpdate()
+                ->findOrFail($transactionId);
 
             $fromAccount = $this->getAccountForUpdate($transaction->getFromAccountID());
             $toAccount = $this->getAccountForUpdate($transaction->getToAccountID());
@@ -96,25 +104,48 @@ class TransactionManager implements ITransactionManager
                 throw new BalanceInsufficientException($toAccount, $available, $amount);
             }
 
-            $transaction = $this->createTransaction($toAccount, $fromAccount, $amount, [
+            $rollbackTransaction = $this->createTransaction($toAccount, $fromAccount, $amount, [
                 'type' => 'rollback-transaction',
                 'original-transaction' => $transactionId,
-            ]);
+            ], $userActivityLog);
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($transaction)
+                    ->withProperties([
+                        'rollback-transaction' => $rollbackTransaction->getID(),
+                    ])
+                    ->log('rollbacked');
+            }
+
+            return $rollbackTransaction;
+        });
+    }
+
+    public function update(int $transactionId, ?array $meta = null, bool $userActivityLog = false): Transaction
+    {
+        return DB::transaction(function () use ($transactionId, $meta, $userActivityLog) {
+            $transaction = Transaction::query()
+                ->lockForUpdate()
+                ->findOrFail($transactionId);
+            $transaction->meta = $meta;
+            $changes = $transaction->changesForLog();
+            $transaction->save();
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($transaction)
+                    ->withProperties($changes)
+                    ->log('updated');
+            }
 
             return $transaction;
         });
     }
 
-    public function update(int $transactionId, ?array $meta = null): Transaction
-    {
-        $transaction = $this->getByID($transactionId);
-        $transaction->meta = $meta;
-        $transaction->save();
-
-        return $transaction;
-    }
-
-    protected function createTransaction(Account $fromAccount, Account $toAccount, INumber $amount, ?array $meta = null): Transaction
+    protected function createTransaction(Account $fromAccount, Account $toAccount, INumber $amount, ?array $meta = null, bool $userActivityLog = false): Transaction
     {
         if ($fromAccount->getCurrencyID() !== $toAccount->getCurrencyID()) {
             throw new CurrencyMismatchException($fromAccount->getCurrency(), $toAccount->getCurrency());
@@ -125,7 +156,16 @@ class TransactionManager implements ITransactionManager
         $transaction->to_id = $toAccount->getID();
         $transaction->amount = $amount;
         $transaction->meta = $meta;
+        $changes = $transaction->changesForLog();
         $transaction->save();
+
+        if ($userActivityLog) {
+            $this->userLogger
+                ->withRequest(request())
+                ->performedOn($transaction)
+                ->withProperties($changes)
+                ->log('created');
+        }
 
         $fromAccount->balance = $fromAccount->getBalance()->sub($amount);
         $fromAccount->save();

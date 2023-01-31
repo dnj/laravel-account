@@ -12,6 +12,7 @@ use dnj\Account\Tests\Models\User;
 use dnj\Account\TransactionManager;
 use dnj\Currency\Contracts\ICurrencyManager;
 use dnj\Currency\CurrencyServiceProvider;
+use dnj\UserLogger\ServiceProvider as UserLoggerServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class TestCase extends \Orchestra\Testbench\TestCase
@@ -22,19 +23,6 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         parent::setUp();
         config()->set('ticket.user_model', User::class);
-    }
-
-    protected function defineDatabaseMigrations(): void
-    {
-        $this->loadMigrationsFrom(__DIR__.'/migrations');
-    }
-
-    protected function getPackageProviders($app)
-    {
-        return [
-            CurrencyServiceProvider::class,
-            AccountServiceProvider::class,
-        ];
     }
 
     public function getAccountManager(): AccountManager
@@ -55,5 +43,19 @@ class TestCase extends \Orchestra\Testbench\TestCase
     public function getHoldingManager(): HoldingManager
     {
         return $this->app->make(IHoldingManager::class);
+    }
+
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/migrations');
+    }
+
+    protected function getPackageProviders($app)
+    {
+        return [
+            CurrencyServiceProvider::class,
+            UserLoggerServiceProvider::class,
+            AccountServiceProvider::class,
+        ];
     }
 }
