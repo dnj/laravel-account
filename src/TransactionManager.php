@@ -140,6 +140,7 @@ class TransactionManager implements ITransactionManager
                     ->withProperties($changes)
                     ->log('updated');
             }
+
             return $transaction;
         });
     }

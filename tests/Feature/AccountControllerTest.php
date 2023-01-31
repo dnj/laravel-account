@@ -8,7 +8,6 @@ use dnj\Account\Models\Account;
 use dnj\Account\Tests\Models\User;
 use dnj\Account\Tests\TestCase;
 use dnj\Currency\Models\Currency;
-use dnj\UserLogger\Models\Log;
 use Illuminate\Testing\Fluent\AssertableJson;
 
 class AccountControllerTest extends TestCase
