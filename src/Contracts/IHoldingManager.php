@@ -6,21 +6,21 @@ use dnj\Number\Contracts\INumber;
 
 interface IHoldingManager
 {
-    public function acquire(int $accountId, INumber $amount, ?array $meta = null, bool $force = false): IHoldingRecord;
+    public function acquire(int $accountId, INumber $amount, ?array $meta = null, bool $force = false, bool $userActivityLog = false): IHoldingRecord;
 
     public function release(int $recordId): IAccount;
 
     /**
      * @param array{amount?:INumber,meta?:array|null} $changes
      */
-    public function update(int $recordId, array $changes): IHoldingRecord;
+    public function update(int $recordId, array $changes, bool $userActivityLog = false): IHoldingRecord;
 
     /**
      * @param iterable<int> $recordIds
      */
-    public function releaseMultiple(iterable $recordIds): IAccount;
+    public function releaseMultiple(iterable $recordIds, bool $userActivityLog = false): IAccount;
 
-    public function releaseAll(int $accountId): IAccount;
+    public function releaseAll(int $accountId, bool $userActivityLog = false): IAccount;
 
     /**
      * @return iterable<IHoldingRecord>

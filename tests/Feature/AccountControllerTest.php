@@ -8,6 +8,7 @@ use dnj\Account\Models\Account;
 use dnj\Account\Tests\Models\User;
 use dnj\Account\Tests\TestCase;
 use dnj\Currency\Models\Currency;
+use dnj\UserLogger\Models\Log;
 use Illuminate\Testing\Fluent\AssertableJson;
 
 class AccountControllerTest extends TestCase
@@ -34,7 +35,7 @@ class AccountControllerTest extends TestCase
                 'cat' => null,
             ],
         ];
-        $this->postJson(route('accounts.store'), $data)
+        $response = $this->postJson(route('accounts.store'), $data)
              ->assertStatus(201)
              ->assertJson(fn (AssertableJson $json) => $json->has('data.id')
                                                              ->etc())

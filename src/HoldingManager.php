@@ -10,6 +10,7 @@ use dnj\Account\Models\Account;
 use dnj\Account\Models\Holding;
 use dnj\Number\Contracts\INumber;
 use dnj\Number\Number;
+use dnj\UserLogger\Contracts\ILogger;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,10 @@ use Illuminate\Support\Facades\DB;
 class HoldingManager implements IHoldingManager
 {
     use UpdatingAccount;
+
+    public function __construct(protected ILogger $userLogger)
+    {
+    }
 
     public function getByID(int $id): Holding
     {
@@ -33,9 +38,9 @@ class HoldingManager implements IHoldingManager
             ->get();
     }
 
-    public function acquire(int $accountId, INumber $amount, ?array $meta = null, bool $force = false): Holding
+    public function acquire(int $accountId, INumber $amount, ?array $meta = null, bool $force = false, bool $userActivityLog = false): Holding
     {
-        return DB::transaction(function () use ($accountId, $amount, $meta, $force) {
+        return DB::transaction(function () use ($accountId, $amount, $meta, $force, $userActivityLog) {
             $account = $this->getAccountForUpdate($accountId);
             $available = $account->getAvailableBalance();
             if (!$force and $available->lt($amount)) {
@@ -46,33 +51,68 @@ class HoldingManager implements IHoldingManager
             $holding->account_id = $accountId;
             $holding->amount = $amount;
             $holding->meta = $meta;
+            $changes = $holding->changesForLog();
             $holding->save();
 
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($holding)
+                    ->withProperties($changes)
+                    ->log('created');
+            }
+
             $account->holding = $account->holding->add($amount);
+            $changes = $account->changesForLog();
             $account->save();
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($account)
+                    ->withProperties($changes)
+                    ->log('held-amount');
+            }
 
             return $holding;
         });
     }
 
-    public function release(int $recordId): Account
+    public function release(int $recordId, bool $userActivityLog = false): Account
     {
-        return DB::transaction(function () use ($recordId) {
+        return DB::transaction(function () use ($recordId, $userActivityLog) {
             $holding = $this->getHoldingForUpdate($recordId);
             $account = $this->getAccountForUpdate($holding->account_id);
 
             $account->holding = $account->holding->sub($holding->amount);
+            $changes = $account->changesForLog();
             $account->save();
 
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($account)
+                    ->withProperties($changes)
+                    ->log('released-amount');
+            }
+
             $holding->delete();
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($holding)
+                    ->withProperties($holding->toArray())
+                    ->log('destroyed');
+            }
 
             return $account;
         });
     }
 
-    public function update(int $recordId, array $changes): Holding
+    public function update(int $recordId, array $changes, bool $userActivityLog = false): Holding
     {
-        return DB::transaction(function () use ($recordId, $changes) {
+        return DB::transaction(function () use ($recordId, $changes, $userActivityLog) {
             $holding = $this->getHoldingForUpdate($recordId);
             $diffHoldingAmount = null;
             if (isset($changes['amount'])) {
@@ -89,7 +129,16 @@ class HoldingManager implements IHoldingManager
             if (array_key_exists('meta', $changes)) {
                 $holding->meta = $changes['meta'];
             }
+            $changes = $holding->changesForLog();
             $holding->save();
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($holding)
+                    ->withProperties($changes)
+                    ->log('updated');
+            }
 
             if ($diffHoldingAmount) {
                 $account = $this->getAccountForUpdate($holding->account_id);
@@ -104,9 +153,9 @@ class HoldingManager implements IHoldingManager
     /**
      * @param iterable<int> $recordIds
      */
-    public function releaseMultiple(iterable $recordIds): Account
+    public function releaseMultiple(iterable $recordIds, bool $userActivityLog = false): Account
     {
-        return DB::transaction(function () use ($recordIds) {
+        return DB::transaction(function () use ($recordIds, $userActivityLog) {
             $holdings = Holding::query()
                 ->lockForUpdate()
                 ->whereIn('id', $recordIds)
@@ -142,26 +191,65 @@ class HoldingManager implements IHoldingManager
 
             $account = $this->getAccountForUpdate($accountId);
             $account->holding = $account->holding->sub($totalHoldings);
+            $changes = $account->changesForLog();
             $account->save();
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($account)
+                    ->withProperties($changes)
+                    ->log('released-amount');
+            }
 
             foreach ($holdings as $holding) {
                 $holding->delete();
+
+                if ($userActivityLog) {
+                    $this->userLogger
+                        ->withRequest(request())
+                        ->performedOn($holding)
+                        ->withProperties($holding->toArray())
+                        ->log('destroyed');
+                }
             }
 
             return $account;
         });
     }
 
-    public function releaseAll(int $accountId): Account
+    public function releaseAll(int $accountId, bool $userActivityLog = false): Account
     {
-        return DB::transaction(function () use ($accountId) {
+        return DB::transaction(function () use ($accountId, $userActivityLog) {
             $account = $this->getAccountForUpdate($accountId);
             $account->holding = Number::fromInt(0);
+            $changes = $account->changesForLog();
             $account->save();
 
-            Holding::query()
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($account)
+                    ->withProperties($changes)
+                    ->log('released-amount');
+            }
+
+            $holdings = Holding::query()
+                ->lockForUpdate()
                 ->where('account_id', $accountId)
-                ->delete();
+                ->get();
+
+            foreach ($holdings as $holding) {
+                $holding->delete();
+
+                if ($userActivityLog) {
+                    $this->userLogger
+                        ->withRequest(request())
+                        ->performedOn($holding)
+                        ->withProperties($holding->toArray())
+                        ->log('destroyed');
+                }
+            }
 
             return $account;
         });

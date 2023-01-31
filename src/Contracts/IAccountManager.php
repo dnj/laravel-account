@@ -24,6 +24,7 @@ interface IAccountManager
         bool $canSend = true,
         bool $canReceive = true,
         ?array $meta = null,
+        bool $userActivityLog = false,
     ): IAccount;
 
     /**
@@ -31,10 +32,11 @@ interface IAccountManager
      */
     public function update(
         int $accountId,
-        array $changes
+        array $changes,
+        bool $userActivityLog = false,
     ): IAccount;
 
     public function recalucateBalance(int $accountId): IAccount;
 
-    public function delete(int $accountId): void;
+    public function delete(int $accountId, bool $userActivityLog = false): void;
 }

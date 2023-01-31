@@ -7,12 +7,17 @@ use dnj\Account\Contracts\AccountStatus;
 use dnj\Account\Contracts\IAccountManager;
 use dnj\Account\Models\Account;
 use dnj\Number\Number;
+use dnj\UserLogger\Contracts\ILogger;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class AccountManager implements IAccountManager
 {
     use UpdatingAccount;
+
+    public function __construct(protected ILogger $userLogger)
+    {
+    }
 
     public function getByID(int $id): Account
     {
@@ -50,6 +55,7 @@ class AccountManager implements IAccountManager
         bool $canSend = true,
         bool $canReceive = true,
         ?array $meta = null,
+        bool $userActivityLog = false,
     ): Account {
         $account = new Account();
         $account->title = $title;
@@ -61,7 +67,16 @@ class AccountManager implements IAccountManager
         $account->can_send = $canSend;
         $account->can_receive = $canReceive;
         $account->meta = $meta;
+        $changes = $account->changesForLog();
         $account->save();
+
+        if ($userActivityLog) {
+            $this->userLogger
+                ->withRequest(request())
+                ->performedOn($account)
+                ->withProperties($changes)
+                ->log('created');
+        }
 
         return $account;
     }
@@ -69,8 +84,9 @@ class AccountManager implements IAccountManager
     public function update(
         int $accountId,
         array $changes,
+        bool $userActivityLog = false,
     ): Account {
-        return DB::transaction(function () use ($accountId, $changes) {
+        return DB::transaction(function () use ($accountId, $changes, $userActivityLog) {
             $account = $this->getAccountForUpdate($accountId);
             if (isset($changes['title'])) {
                 $account->title = $changes['title'];
@@ -90,7 +106,16 @@ class AccountManager implements IAccountManager
             if (array_key_exists('meta', $changes)) {
                 $account->meta = $changes['meta'];
             }
+            $changes = $account->changesForLog();
             $account->save();
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($account)
+                    ->withProperties($changes)
+                    ->log('updated');
+            }
 
             return $account;
         });
@@ -113,9 +138,19 @@ class AccountManager implements IAccountManager
         });
     }
 
-    public function delete(int $accountId): void
+    public function delete(int $accountId, bool $userActivityLog = false): void
     {
-        $account = $this->getByID($accountId);
-        $account->delete();
+        DB::transaction(function () use ($accountId, $userActivityLog) {
+            $account = $this->getAccountForUpdate($accountId);
+            $account->delete();
+
+            if ($userActivityLog) {
+                $this->userLogger
+                    ->withRequest(request())
+                    ->performedOn($account)
+                    ->withProperties($account->toArray())
+                    ->log('destroyed');
+            }
+        });
     }
 }

@@ -13,7 +13,6 @@ class AccountServiceProvider extends ServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(__DIR__.'/../config/account.php', 'account');
-        $this->app->register(\dnj\UserLogger\ServiceProvider::class);
         $this->app->singleton(IAccountManager::class, AccountManager::class);
         $this->app->singleton(ITransactionManager::class, TransactionManager::class);
         $this->app->singleton(IHoldingManager::class, HoldingManager::class);
@@ -32,10 +31,11 @@ class AccountServiceProvider extends ServiceProvider
 
     private function loadRoutes()
     {
-        if (config('account.route_enable')) {
-            Route::prefix(config('account.route_prefix'))->group(function () {
-                $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
-            });
+        if (!config('account.route_enable')) {
+            return;
         }
+        Route::prefix(config('account.route_prefix'))->group(function () {
+            $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+        });
     }
 }

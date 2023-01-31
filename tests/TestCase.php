@@ -13,6 +13,7 @@ use dnj\Account\TransactionManager;
 use dnj\Currency\Contracts\ICurrencyManager;
 use dnj\Currency\CurrencyServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use dnj\UserLogger\ServiceProvider as UserLoggerServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -33,6 +34,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         return [
             CurrencyServiceProvider::class,
+            UserLoggerServiceProvider::class,
             AccountServiceProvider::class,
         ];
     }

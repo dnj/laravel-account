@@ -5,10 +5,13 @@ namespace dnj\Account\Models;
 use dnj\Account\Contracts\IHoldingRecord;
 use dnj\Number\Contracts\INumber;
 use dnj\Number\Laravel\Casts\Number;
+use dnj\UserLogger\Concerns\Loggable;
 use Illuminate\Database\Eloquent\Model;
 
 class Holding extends Model implements IHoldingRecord
 {
+    use Loggable;
+
     protected $casts = [
         'amount' => Number::class,
         'meta' => 'array',
