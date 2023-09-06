@@ -8,7 +8,7 @@
     "dnj/laravel-currency": "^1.0.1",
     "dnj/number": "^1.0.0",
     "laravel/legacy-factories": "^1.3",
-    "dnj/laravel-user-logger": "dev-master"
+    "dnj/laravel-user-logger": "^1.0.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.5",
